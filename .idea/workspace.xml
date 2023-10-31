@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="f1e41e12-3e24-4f2b-8c3c-b890b6d497da" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/lightning_test.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-    </list>
+    <list default="true" id="f1e41e12-3e24-4f2b-8c3c-b890b6d497da" name="Changes" comment="Upload the Pytorch Lightnung" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -91,6 +88,21 @@
       <option name="presentableId" value="Default" />
       <updated>1698599742560</updated>
     </task>
+    <task id="LOCAL-00001" summary="Upload the Pytorch Lightnung">
+      <created>1698605407407</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1698605407407</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Upload the Pytorch Lightnung">
+      <created>1698605520456</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1698605520456</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -103,6 +115,10 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Upload the Pytorch Lightnung" />
+    <option name="LAST_COMMIT_MESSAGE" value="Upload the Pytorch Lightnung" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
