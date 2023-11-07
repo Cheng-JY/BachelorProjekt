@@ -10,7 +10,7 @@ from torchvision.datasets import MNIST
 
 # Creat a logger
 logger = logging.getLogger(Path(__file__).stem)
-logger.setLevel(logger.INFO)
+logger.setLevel(logging.INFO)
 
 _DEFAULT_MNIST_BATCH_SIZE = 32
 _DEFAULT_RESIZE_SIZE = 32
@@ -41,7 +41,7 @@ class MNISTDataModule(pl.LightningDataModule):
             self.mnist_test = MNIST(self.data_dir, train=False, download=True, transform=self.transform)
         elif stage == "fit" or stage == "validate":
             mnist_full = MNIST(self.data_dir, train=False, download=True, transform=self.transform)
-            self.mnist_train, self.mnist_val = random_split(mnist_full, [55000, 5000])
+            self.mnist_train, self.mnist_val = random_split(mnist_full, [int(0.8*len(mnist_full)), len(mnist_full) - int(0.8*len(mnist_full))])
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(self.mnist_train, batch_size=self.batch_size)

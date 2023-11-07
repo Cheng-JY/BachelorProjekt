@@ -36,3 +36,58 @@ def save_results(
     for img_indice in selected_img_indices:
         img_filepath = out_dir / f"{img_indice}_predicted_{torch.argmax(output_tensors[img_indice], dim=1)[0]}.png"
         torchvision.utils.save_image(img_tensors[img_indice][0], fp=img_filepath)
+
+def main(
+        device: int,
+        max_epoch: int,
+        out_dir: Path | None,
+        early_stopping: bool | None,
+):
+    accelerator = "gpu" if torch.cuda.is_available() else "cpu"
+    if out_dir is None:
+        out_dir = Path(__file__).parent / "output"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Select architecture
+    model = LeNet(in_channels=1, out_channels=10)
+    data_module = MNISTDataModule(data_dir=_PATH_DATASETS, batch_size=_BATCH_SIZE)
+
+    callback = (
+        [
+            EarlyStopping(
+                monitor="val_loss",
+                min_delta=0.00,
+                patience=_EARLY_STOPPING_PATIENCE,
+                verbose=True,
+                mode="min",
+            )
+        ]
+        if early_stopping
+        else []
+    )
+
+    trainer = L.Trainer(
+        accelerator=accelerator,
+        strategy='auto',
+        max_epochs=max_epoch,
+        callbacks=callback,
+        default_root_dir=out_dir,
+    )
+
+    trainer.fit(model, datamodule=data_module)
+    trainer.validate(datamodule=data_module)
+
+    trainer.test(datamodule=data_module)
+
+    output_preds = trainer.predict(datamodule=data_module, ckpt_path="best")
+    img_tensors, softmax_preds = zip(*output_preds)
+    out_dir_imgs = out_dir / "test_images"
+    out_dir_imgs.mkdir(exist_ok=True, parents=True)
+    save_results(
+        img_tensors=img_tensors,
+        output_tensors=softmax_preds,
+        out_dir=out_dir_imgs,
+    )
+
+if __name__ == "__main__":
+    main(0, 10, None, None)

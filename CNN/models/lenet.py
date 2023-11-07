@@ -15,7 +15,7 @@ class LeNet(pl.LightningModule):
         - in_channels: 1 for grayscale input image, 3 for RGB image
         - out_channels: Number of classes of the classifier
         """
-        super.__init__()
+        super().__init__()
         # Debugging tool to display intermediate input/output size of your layer (called before fit)
         self.example_input_array = torch.Tensor(16, in_channels, 32, 32)
         self.learning_rate = lr
@@ -58,7 +58,7 @@ class LeNet(pl.LightningModule):
         # "Softmax" Layer
         self.fc3 = nn.Linear(in_features=84, out_features=out_channels)
 
-    def forword(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = F.relu(self.conv_layer1(x))
         x = F.relu(self.conv_layer2(x))
         # flatten
