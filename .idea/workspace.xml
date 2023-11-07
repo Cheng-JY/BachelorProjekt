@@ -1,13 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="f1e41e12-3e24-4f2b-8c3c-b890b6d497da" name="Changes" comment="Upload the Pytorch Lightnung">
-      <change afterPath="$PROJECT_DIR$/CNN/Train.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/CNN/datasets/mnist.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/CNN/models/lenet.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="f1e41e12-3e24-4f2b-8c3c-b890b6d497da" name="Changes" comment="Upload the Pytorch Lightnung" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -122,7 +116,14 @@
       <option name="project" value="LOCAL" />
       <updated>1698781776523</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Upload the Pytorch Lightnung">
+      <created>1699352771035</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1699352771035</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
