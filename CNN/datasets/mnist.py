@@ -5,7 +5,7 @@ from pathlib import Path
 
 import lightning.pytorch as pl
 from torch.utils.data import DataLoader, random_split
-from torchvision import transforms
+from torchvision.transforms import v2
 from torchvision.datasets import MNIST
 
 # Creat a logger
@@ -23,11 +23,12 @@ class MNISTDataModule(pl.LightningDataModule):
         self.mnist_test = None
         self.data_dir = data_dir
         self.batch_size = batch_size
-        self.transform = transforms.Compose(
+        self.transform = v2.Compose(
             [
-                transforms.ToTensor(),
-                transforms.Resize((_DEFAULT_RESIZE_SIZE, _DEFAULT_MNIST_BATCH_SIZE)),
-                transforms.Normalize((0.1307,), (0.3081,)),
+                v2.ToTensor(),
+                v2.Resize((_DEFAULT_RESIZE_SIZE, _DEFAULT_MNIST_BATCH_SIZE), antialias=True),
+                v2.RandomRotation(degrees=10),
+                v2.Normalize((0.1307,), (0.3081,)),
             ]
         )
 
