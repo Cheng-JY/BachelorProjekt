@@ -8,8 +8,8 @@ whole dataset.
 
 import numpy as np
 
-from ..base import SingleAnnotatorPoolQueryStrategy
-from ..utils import MISSING_LABEL, labeled_indices, unlabeled_indices
+from skactiveml.base import SingleAnnotatorPoolQueryStrategy
+from skactiveml.utils import MISSING_LABEL, labeled_indices, unlabeled_indices
 from sklearn.metrics import pairwise_distances
 
 
@@ -115,7 +115,7 @@ class CoreSet(SingleAnnotatorPoolQueryStrategy):
                 y_cand = np.full(shape=n_new_cand, fill_value=MISSING_LABEL)
                 y_with_cand = np.concatenate((y_cand, y), axis=None)
                 mapping = np.arange(n_new_cand)
-                query_indices, utilities = k_greedy_center(X_with_cand, y_with_cand, batch_size, self.random_state, self.missing_label, mapping, n_new_cand)
+                query_indices, utilities = k_greedy_center(X_with_cand, y_with_cand, batch_size, self.random_state_, self.missing_label, mapping, n_new_cand)
 
         if return_utilities:
             return query_indices, utilities
