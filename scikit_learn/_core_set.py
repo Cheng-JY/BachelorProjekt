@@ -232,6 +232,7 @@ def update_distances(X, cluster_centers, mapping):
         cluster_center_feature = X[cluster_centers]
         dist_matrix = pairwise_distances(X, cluster_center_feature)
         dist = np.min(dist_matrix, axis=1).reshape(1, -1)
+        print(dist.shape)
 
     result_dist = np.full((1, X.shape[0]), np.nan)
     result_dist[0, mapping] = dist[0, mapping]
