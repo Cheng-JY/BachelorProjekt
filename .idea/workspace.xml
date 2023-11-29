@@ -2,10 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f1e41e12-3e24-4f2b-8c3c-b890b6d497da" name="Changes" comment="Upload the Pytorch Lightnung">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CNN/Train.py" beforeDir="false" afterPath="$PROJECT_DIR$/CNN/Train.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CNN/datasets/mnist.py" beforeDir="false" afterPath="$PROJECT_DIR$/CNN/datasets/mnist.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CNN/models/lenet.py" beforeDir="false" afterPath="$PROJECT_DIR$/CNN/models/lenet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scikit_learn/06_CoreKCenterGreedy.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/scikit_learn/06_CoreKCenterGreedy.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scikit_learn/_core_set.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
