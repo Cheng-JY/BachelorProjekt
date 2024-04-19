@@ -1,19 +1,20 @@
 import torch
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LogisticRegression
 import numpy as np
+from tqdm import tqdm
 
 if __name__ == "__main__":
     # 1. Load Data Set
     transform = transforms.Compose(
-        [transforms.ToTensor(),
-         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-         transforms.Resize(224),
-         transforms.CenterCrop(224)]
+        [transforms.Resize(256),
+         transforms.CenterCrop(224),
+         transforms.ToTensor(),
+         transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))]
     )
 
-    batch_size = 1
+    batch_size = 4
 
     cifar_trainset = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
     trainloader = torch.utils.data.DataLoader(cifar_trainset, batch_size=batch_size,
@@ -28,35 +29,34 @@ if __name__ == "__main__":
     # 2. Compute Embeddings for Image
     dinov2_vits14 = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14")
 
-    all_embeddings = {}
+    embeddings_list = []
+    labels_list = []
 
     with torch.no_grad():
-        for i, data in enumerate(trainloader, 0):
+        for i, data in tqdm(enumerate(trainloader), total=len(trainloader)):
             image, label = data
 
             embeddings = dinov2_vits14(image)
-            all_embeddings[label[0]] = embeddings
-            if i > 10:
-                if i == 11:
-                    test_embedding = dinov2_vits14(image)
-                    test_label = label[0]
+            embeddings_list.append(embeddings)
+            labels_list.append(label)
+            if i > 100:
                 break
 
+    X = torch.cat(embeddings_list, dim=0).numpy()
+    y = torch.cat(labels_list, dim=0).numpy()
+    print(X.shape)
+    print(y.shape)
+
+    # X = np.load('cifar10_dinov2_X.npy')
+    # y = np.load('cifar10_dinov2_y.npy')
+
     # 3. Train Linear Regression Model
+    n_train_samples = int(len(X) * 0.8)
+    clf = LogisticRegression(max_iter=5000)
+    # y = np.array(labels_list)
+    # X = np.array(embeddings_list).reshape(-1, 384)
+    score = clf.fit(X[:n_train_samples], y[:n_train_samples]).score(X[n_train_samples:], y[n_train_samples:])
+    print(score)
 
-    clf = LinearRegression()
-    y = list(all_embeddings.keys())
-    embedding_list = list(all_embeddings.values())
-    clf.fit(np.array(embedding_list).reshape(-1, 384), y)
-
-    # 4. Prediction
-    prediction = clf.predict(np.array(test_embedding[0]).reshape(1,-1))
-
-    print("predicted class: ", prediction[0])
-    print("true class: ", test_label)
-
-
-
-
-
-
+    np.save('cifar10_dinov2_X.npy', X)
+    np.save('cifar10_dinov2_y.npy', y)
