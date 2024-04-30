@@ -1,4 +1,4 @@
-from torch.optim import SGD
+from torch.optim import SGD # Stochastic Gradient Descent to fit the neural network to the data
 from Lightning.models.basic_nn import BasicNN_train
 
 
