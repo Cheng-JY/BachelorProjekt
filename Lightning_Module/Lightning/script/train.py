@@ -1,5 +1,5 @@
 from torch.optim import SGD # Stochastic Gradient Descent to fit the neural network to the data
-from Lightning.models.basic_nn import BasicNN_train
+from Lightning_Module.Lightning.models.basic_nn import BasicNN_train
 
 
 def train(model: BasicNN_train, inputs, labels):
