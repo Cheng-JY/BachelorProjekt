@@ -24,6 +24,16 @@ def plot_loss(df, nn_name, max_epochs, batch_size, optimizer_lr, optimizer__weig
         plt.plot(valid_loss, label='valid_loss')
         plt.show()
 
+def get_best_hyperparameters(df, nn_name):
+    df = df.loc[(df['params.nn_name'] == nn_name)]
+    print(df.columns)
+    max_test_accuracy = df.loc[:, 'metrics.test_accuracy'].max()
+    hyperparameter = df.loc[df['metrics.test_accuracy'] == max_test_accuracy, ]
+    hyperparameter = hyperparameter[['params.batch_size', 'params.max_epochs',
+                          'params.optimizer_lr', 'params.optimizer__weight_decay',
+                          'metrics.train_accuracy', 'metrics.test_accuracy']]
+    hyperparameter.to_csv(f'{nn_name}_best_hyperparameter.csv', index=False)
+
 
 if __name__ == '__main__':
     mlflow.set_tracking_uri(uri="/Users/chengjiaying/BachelorProjekt/scikit_learn/SkorchClassifier/tracking")
@@ -36,4 +46,5 @@ if __name__ == '__main__':
     csv_df = df[['params.nn_name', 'params.batch_size', 'params.max_epochs', 'params.optimizer_lr',
                  'params.optimizer__weight_decay', 'metrics.train_accuracy', 'metrics.test_accuracy']]
     # csv_df.to_csv('hyperparameter.csv', index=False)
-    plot_loss(plot_df, nn_name='lb', max_epochs=100, batch_size=16, optimizer_lr=0.005, optimizer__weight_decay=0.001)
+    # plot_loss(plot_df, nn_name='lb', max_epochs=100, batch_size=16, optimizer_lr=0.005, optimizer__weight_decay=0.001)
+    get_best_hyperparameters(csv_df, nn_name='lb')
