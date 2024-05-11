@@ -16,6 +16,8 @@ from skorch.helper import predefined_split
 from classifier.crowd_layer_classifier import CrowdLayerClassifier
 from classifier.skorch_classifier import SkorchClassifier
 
+from skactiveml.utils import majority_vote
+
 import mlflow
 
 
@@ -81,36 +83,71 @@ if __name__ == '__main__':
 
     with (mlflow.start_run(experiment_id=experiment_id) as active_run):
         hyper_dict = {
-            'max_epochs': 200,
+            'max_epochs': 100,
             'batch_size': 8,
             'optimizer_lr': 0.001,
             'optimizer__weight_decay': 0.0001
         }
-        gt_net = GroundTruthModule(n_classes=n_classes, dropout=0.0)
-        crowd_layer_net = CrowdLayerClassifier(
-            module__n_annotators=y_train.shape[1],
-            module__gt_net=gt_net,
-            classes=dataset_classes,
-            missing_label=MISSING_LABEL,
-            cost_matrix=None,
-            random_state=1,
-            train_split=predefined_split(valid_ds),
-            verbose=False,
-            optimizer=torch.optim.AdamW,
-            device=device,
-            **hyper_dict
-        )
-        crowd_layer_net.initialize()
 
-        hyper_dict['nn_name'] = 'cl'
+        nn_name = 'lb'
+        if nn_name == 'cl':
+            gt_net = GroundTruthModule(n_classes=n_classes, dropout=0.0)
+            net = CrowdLayerClassifier(
+                module__n_annotators=y_train.shape[1],
+                module__gt_net=gt_net,
+                classes=dataset_classes,
+                missing_label=MISSING_LABEL,
+                cost_matrix=None,
+                random_state=1,
+                train_split=predefined_split(valid_ds),
+                verbose=False,
+                optimizer=torch.optim.AdamW,
+                device=device,
+                **hyper_dict
+            )
+        elif nn_name == 'ub':
+            net = SkorchClassifier(
+                GroundTruthModule,
+                classes=dataset_classes,
+                missing_label=MISSING_LABEL,
+                cost_matrix=None,
+                random_state=1,
+                criterion=nn.CrossEntropyLoss(),
+                train_split=predefined_split(valid_ds),
+                verbose=False,
+                optimizer=torch.optim.AdamW,
+                device=device,
+                module__dropout=0.0,
+                **hyper_dict
+            )
+            y_train = y_train_true
+        elif nn_name == 'lb':
+            net = SkorchClassifier(
+                GroundTruthModule,
+                classes=dataset_classes,
+                missing_label=MISSING_LABEL,
+                cost_matrix=None,
+                random_state=1,
+                criterion=nn.CrossEntropyLoss(),
+                train_split=predefined_split(valid_ds),
+                verbose=False,
+                optimizer=torch.optim.AdamW,
+                device=device,
+                module__dropout=0.0,
+                **hyper_dict
+            )
+            y_train = majority_vote(y_train, classes=dataset_classes, missing_label=-1)
+        net.initialize()
+
+        hyper_dict['nn_name'] = nn_name
         mlflow.log_params(hyper_dict)
 
-        crowd_layer_net.fit(X_train, y_train)
+        net.fit(X_train, y_train)
 
-        y_train_pred = crowd_layer_net.predict(X_train)
+        y_train_pred = net.predict(X_train)
         train_accuracy = accuracy_score(y_train_true, y_train_pred)
 
-        y_pred = crowd_layer_net.predict(X_test)
+        y_pred = net.predict(X_test)
         test_accuracy = accuracy_score(y_pred, y_test_true)
         metrics = {
             'train_accuracy': train_accuracy,
@@ -118,7 +155,7 @@ if __name__ == '__main__':
         }
         mlflow.log_metrics(metrics)
 
-        history = crowd_layer_net.history
+        history = net.history
         train_loss = history[:, 'train_loss']
         valid_loss = history[:, 'valid_loss']
 
