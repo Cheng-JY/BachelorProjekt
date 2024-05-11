@@ -6,10 +6,6 @@ import os
 import mlflow
 
 
-def read_hyperparameter():
-    pass
-
-
 def plot_loss(df, nn_name, max_epochs, batch_size, optimizer_lr, optimizer__weight_decay):
     artifact_uri = df.loc[(df['params.nn_name'] == nn_name)
                           & (df['params.batch_size'] == str(batch_size))
