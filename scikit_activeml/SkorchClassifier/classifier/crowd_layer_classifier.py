@@ -62,7 +62,7 @@ class CrowdLayerClassifier(SkorchClassifier, AnnotatorModelMixin):
         Xi, yi = unpack_data(batch)
         with torch.no_grad():
             y_pred = self.predict(Xi)
-            acc = torch.mean(y_pred == yi)
+            acc = torch.mean((y_pred == yi).float())
         return {
             'loss': acc,
             'y_pred': y_pred,
