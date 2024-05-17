@@ -37,10 +37,10 @@ class CrowdLayerClassifier(SkorchClassifier, AnnotatorModelMixin):
 
     def predict_annotator_perf(self, X, return_confusion_matrix=False):
         n_annotators = self.module__n_annotators
-        p_class, logits_annot = self.forward(X)
-        p_annot = F.softmax(logits_annot, dim=1)
-        P_class = torch.vstack([p for p in p_class]).numpy()
-        P_annot = p_annot.numpy()
+        P_class, logits_annot = self.forward(X)
+        P_class = P_class.numpy()
+        P_annot = F.softmax(logits_annot, dim=1)
+        P_annot = P_annot.numpy()
         P_perf = np.array([np.einsum("ij,ik->ijk", P_class, P_annot[:, :, i]) for i in range(n_annotators)])
         P_perf = P_perf.swapaxes(0, 1)
         if return_confusion_matrix:
@@ -53,8 +53,8 @@ class CrowdLayerClassifier(SkorchClassifier, AnnotatorModelMixin):
         return p_class.argmax(axis=1)
 
     def predict_proba(self, X):
-        p_class, logits_annot = self.forward(X)
-        P_class = torch.vstack([p for p in p_class]).numpy()
+        P_class, logits_annot = self.forward(X)
+        P_class = P_class.numpy()
         return P_class
 
     def validation_step(self, batch, **fit_params):
@@ -85,7 +85,7 @@ class CrowdLayerModule(nn.Module):
         self.annotator_layers = nn.ModuleList()
         for i in range(n_annotators):
             layer = nn.Linear(n_classes, n_classes, bias=False)
-            nn.init.eye_(layer.weight)
+            layer.weight = nn.Parameter(torch.eye(n_classes) * 10)
             self.annotator_layers.append(layer)
 
     def forward(self, x):
