@@ -120,10 +120,10 @@ if __name__ == '__main__':
 
     print(metrics)
 
-    # print(net.module_.annotator_layers[0].weight)
+    print(net.module_.annotator_layers[0].weight)
 
-    # proba_annotator_pref = net.predict_annotator_perf(X_test[0:1], False)
-    # print(proba_annotator_pref)
+    proba_annotator_pref = net.predict_annotator_perf(X_test[0:1], False)
+    print(proba_annotator_pref)
 
     history = net.history
     train_loss = history[:, 'train_loss']
