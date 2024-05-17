@@ -36,7 +36,7 @@ def get_best_hyperparameters(df, nn_name):
 
 
 if __name__ == '__main__':
-    mlflow.set_tracking_uri(uri="/Users/chengjiaying/BachelorProjekt/scikit_learn/SkorchClassifier/tracking")
+    mlflow.set_tracking_uri(uri="/Users/chengjiaying/BachelorProjekt/scikit_activeml/SkorchClassifier/tracking")
 
     experiment = mlflow.get_experiment_by_name("Hyperparameter-Tuning-05-10")
     df = mlflow.search_runs(experiment_ids=experiment.experiment_id, output_format="pandas")

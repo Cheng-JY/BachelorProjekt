@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
     valid_ds = Dataset(X_valid, y_valid_true)
 
-    mlflow.set_tracking_uri(uri="/Users/chengjiaying/BachelorProjekt/scikit_learn/SkorchClassifier/tracking")
+    mlflow.set_tracking_uri(uri="/Users/chengjiaying/BachelorProjekt/scikit_activeml/SkorchClassifier/tracking")
     exp = mlflow.get_experiment_by_name(name="Hyperparameter-Tuning-05-10")
     experiment_id = mlflow.create_experiment(name="Hyperparameter-Tuning-05-10") if exp is None else exp.experiment_id
 
