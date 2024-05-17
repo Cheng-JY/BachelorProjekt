@@ -29,6 +29,8 @@ class CrowdLayerClassifier(SkorchClassifier, AnnotatorModelMixin):
         return loss
 
     def fit(self, X, y, **fit_params):
+        # utils _label_encode.fit_transform
+        # _valid_data() in Skactivml
         is_unlbld = unlabeled_indices(y, self.missing_label)
         y[is_unlbld[:,0], is_unlbld[:,1]] = -1
         return NeuralNet.fit(self, X, y, **fit_params)
@@ -46,6 +48,7 @@ class CrowdLayerClassifier(SkorchClassifier, AnnotatorModelMixin):
         return P_perf.diagonal(axis1=-2, axis2=-1).sum(axis=-1)
 
     def predict(self, X):
+        # maybe flag to switch between mode
         p_class, logits_annot = self.forward(X)
         return p_class.argmax(axis=1)
 
@@ -56,13 +59,10 @@ class CrowdLayerClassifier(SkorchClassifier, AnnotatorModelMixin):
 
     def validation_step(self, batch, **fit_params):
         # not for loss but for acc
-        self._set_training(False)
         Xi, yi = unpack_data(batch)
         with torch.no_grad():
             y_pred = self.predict(Xi)
-            print(y_pred)
-            print(yi)
-            acc = torch.sum(y_pred == yi) / y_pred.shape[0]
+            acc = torch.mean(y_pred == yi)
         return {
             'loss': acc,
             'y_pred': y_pred,
@@ -102,7 +102,7 @@ class CrowdLayerModule(nn.Module):
         -------
         p_class : torch.Tensor of shape (batch_size, n_classes)
             Class-membership probabilities.
-        logits_annot : torch.Tensor of shape (batch_size, n_annotators, n_classes)
+        logits_annot : torch.Tensor of shape (batch_size, n_classes, n_annotators)
             Annotation logits for each sample-annotator pair.
         """
         # Compute class-membership logits.

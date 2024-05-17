@@ -89,7 +89,7 @@ if __name__ == '__main__':
             'optimizer__weight_decay': 0.0001
         }
 
-        nn_name = 'lb'
+        nn_name = 'cl'
         if nn_name == 'cl':
             gt_net = GroundTruthModule(n_classes=n_classes, dropout=0.0)
             net = CrowdLayerClassifier(
