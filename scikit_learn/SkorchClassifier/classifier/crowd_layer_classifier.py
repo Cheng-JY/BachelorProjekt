@@ -3,6 +3,7 @@ import torch
 import torch.nn.functional as F
 from skactiveml.base import AnnotatorModelMixin
 from skorch import NeuralNet
+from skorch.dataset import unpack_data
 from torch import nn
 from torch.nn import CrossEntropyLoss
 from skactiveml.utils import unlabeled_indices
@@ -52,6 +53,20 @@ class CrowdLayerClassifier(SkorchClassifier, AnnotatorModelMixin):
         p_class, logits_annot = self.forward(X)
         P_class = torch.vstack([p for p in p_class]).numpy()
         return P_class
+
+    def validation_step(self, batch, **fit_params):
+        # not for loss but for acc
+        self._set_training(False)
+        Xi, yi = unpack_data(batch)
+        with torch.no_grad():
+            y_pred = self.predict(Xi)
+            print(y_pred)
+            print(yi)
+            acc = torch.sum(y_pred == yi) / y_pred.shape[0]
+        return {
+            'loss': acc,
+            'y_pred': y_pred,
+        }
 
 
 class CrowdLayerModule(nn.Module):
