@@ -1,6 +1,8 @@
 import os
 import sys
 
+from skorch.callbacks import LRScheduler
+
 sys.path.append('..')
 
 import numpy as np
@@ -78,16 +80,17 @@ if __name__ == '__main__':
     valid_ds = Dataset(X_valid, y_valid_true)
 
     mlflow.set_tracking_uri(uri="/Users/chengjiaying/BachelorProjekt/scikit_activeml/SkorchClassifier/tracking")
-    exp = mlflow.get_experiment_by_name(name="Hyperparameter-Tuning-05-10")
-    experiment_id = mlflow.create_experiment(name="Hyperparameter-Tuning-05-10") if exp is None else exp.experiment_id
+    exp = mlflow.get_experiment_by_name(name="Hyperparameter-Tuning-05-18")
+    experiment_id = mlflow.create_experiment(name="Hyperparameter-Tuning-05-18") if exp is None else exp.experiment_id
 
     with (mlflow.start_run(experiment_id=experiment_id) as active_run):
         hyper_dict = {
-            'max_epochs': 100,
-            'batch_size': 8,
-            'optimizer_lr': 0.001,
+            'max_epochs': 200,
+            'batch_size': 64,
+            'lr': 0.01,
             'optimizer__weight_decay': 0.0001
         }
+        lr_scheduler = LRScheduler(policy="CosineAnnealingLR", T_max=hyper_dict['max_epochs'])
 
         nn_name = 'cl'
         if nn_name == 'cl':
@@ -103,6 +106,7 @@ if __name__ == '__main__':
                 verbose=False,
                 optimizer=torch.optim.AdamW,
                 device=device,
+                callbacks=[lr_scheduler],
                 **hyper_dict
             )
         elif nn_name == 'ub':
@@ -118,6 +122,7 @@ if __name__ == '__main__':
                 optimizer=torch.optim.AdamW,
                 device=device,
                 module__dropout=0.0,
+                callbacks=[lr_scheduler],
                 **hyper_dict
             )
             y_train = y_train_true
@@ -134,10 +139,12 @@ if __name__ == '__main__':
                 optimizer=torch.optim.AdamW,
                 device=device,
                 module__dropout=0.0,
+                callbacks=[lr_scheduler],
                 **hyper_dict
             )
             y_train = majority_vote(y_train, classes=dataset_classes, missing_label=-1)
         net.initialize()
+        print(net.lr)
 
         hyper_dict['nn_name'] = nn_name
         mlflow.log_params(hyper_dict)
@@ -154,6 +161,7 @@ if __name__ == '__main__':
             'test_accuracy': test_accuracy,
         }
         mlflow.log_metrics(metrics)
+        print(metrics)
 
         history = net.history
         train_loss = history[:, 'train_loss']
@@ -161,7 +169,6 @@ if __name__ == '__main__':
 
         loss = {'train_loss': train_loss, 'valid_loss': valid_loss}
         df = pd.DataFrame.from_dict(data=loss)
-        print(active_run.info.artifact_uri)
         outpath = active_run.info.artifact_uri
         outpath = os.path.join(outpath, "result.csv")
         df.to_csv(outpath, index=False)

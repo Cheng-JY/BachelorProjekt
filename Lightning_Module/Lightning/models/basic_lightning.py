@@ -13,7 +13,7 @@ class BasicLightning(L.LightningModule):
     """
     Creating pre-trained neural network and running data through it
     inherit from LightningModule instead of nn.Module, which is what we did when we use
-    Pytorch without Lightning.
+    Pytorch without Pytorch.
 
     We put all of the code relating to the neural network in the same place
     """
@@ -48,7 +48,7 @@ class BasicLightningTrain(L.LightningModule):
     """
     Creating pre-trained neural network and running data through it
     inherit from LightningModule instead of nn.Module, which is what we did when we use
-    Pytorch without Lightning.
+    Pytorch without Pytorch.
     """
     def __init__(self):
         super().__init__()

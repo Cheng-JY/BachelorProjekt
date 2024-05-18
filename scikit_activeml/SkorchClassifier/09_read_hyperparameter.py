@@ -30,7 +30,7 @@ def get_best_hyperparameters(df, nn_name):
     max_test_accuracy = df.loc[:, 'metrics.test_accuracy'].max()
     hyperparameter = df.loc[df['metrics.test_accuracy'] == max_test_accuracy, ]
     hyperparameter = hyperparameter[['params.batch_size', 'params.max_epochs',
-                          'params.optimizer_lr', 'params.optimizer__weight_decay',
+                          'params.lr', 'params.optimizer__weight_decay',
                           'metrics.train_accuracy', 'metrics.test_accuracy']]
     hyperparameter.to_csv(f'{nn_name}_best_hyperparameter.csv', index=False)
 
@@ -38,13 +38,13 @@ def get_best_hyperparameters(df, nn_name):
 if __name__ == '__main__':
     mlflow.set_tracking_uri(uri="/Users/chengjiaying/BachelorProjekt/scikit_activeml/SkorchClassifier/tracking")
 
-    experiment = mlflow.get_experiment_by_name("Hyperparameter-Tuning-05-10")
+    experiment = mlflow.get_experiment_by_name("Hyperparameter-Tuning-05-18")
     df = mlflow.search_runs(experiment_ids=experiment.experiment_id, output_format="pandas")
 
-    plot_df = df[['params.nn_name', 'params.batch_size', 'params.max_epochs', 'params.optimizer_lr',
+    plot_df = df[['params.nn_name', 'params.batch_size', 'params.max_epochs', 'params.lr',
                   'params.optimizer__weight_decay', 'metrics.train_accuracy', 'metrics.test_accuracy', 'artifact_uri']]
-    csv_df = df[['params.nn_name', 'params.batch_size', 'params.max_epochs', 'params.optimizer_lr',
+    csv_df = df[['params.nn_name', 'params.batch_size', 'params.max_epochs', 'params.lr',
                  'params.optimizer__weight_decay', 'metrics.train_accuracy', 'metrics.test_accuracy']]
-    # csv_df.to_csv('hyperparameter.csv', index=False)
+    csv_df.to_csv('hyperparameter.csv', index=False)
     # plot_loss(plot_df, nn_name='lb', max_epochs=100, batch_size=16, optimizer_lr=0.005, optimizer__weight_decay=0.001)
-    get_best_hyperparameters(csv_df, nn_name='lb')
+    # get_best_hyperparameters(csv_df, nn_name='lb')

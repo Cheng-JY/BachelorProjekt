@@ -31,6 +31,7 @@ class CrowdLayerClassifier(SkorchClassifier, AnnotatorModelMixin):
     def fit(self, X, y, **fit_params):
         # utils _label_encode.fit_transform
         # _valid_data() in Skactivml
+
         is_unlbld = unlabeled_indices(y, self.missing_label)
         y[is_unlbld[:,0], is_unlbld[:,1]] = -1
         return NeuralNet.fit(self, X, y, **fit_params)
