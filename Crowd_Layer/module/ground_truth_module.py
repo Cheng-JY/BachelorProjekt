@@ -1,6 +1,6 @@
-import torch
 import torch.nn.functional as F
 from torch import nn
+
 
 class ClassifierModule(nn.Module):
     def __init__(self, n_classes, dropout):

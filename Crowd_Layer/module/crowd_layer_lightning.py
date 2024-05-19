@@ -3,16 +3,18 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim import AdamW
+from torch.optim.lr_scheduler import CosineAnnealingLR
 
 
-class CrowdLayerModule(L.LightningModule):
+class CrowdLayerLightning(L.LightningModule):
     def __init__(
             self,
             n_classes,
             n_annotators,
             gt_net,
             lr,
-            weight_decay=1e-4
+            weight_decay=1e-4,
+            max_epochs=100,
     ):
         super().__init__()
         L.seed_everything(42)
@@ -21,6 +23,7 @@ class CrowdLayerModule(L.LightningModule):
         self.gt_net = gt_net
         self.lr = lr
         self.weight_decay = weight_decay
+        self.max_epochs = max_epochs
 
         # Setup crowd layer.
         self.annotator_layers = nn.ModuleList()
@@ -61,12 +64,15 @@ class CrowdLayerModule(L.LightningModule):
         return p_class, logits_annot
 
     def configure_optimizers(self):
-        return AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        optimizer = AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        lr_scheduler = CosineAnnealingLR(optimizer, T_max=self.max_epochs)
+        return [optimizer], [lr_scheduler]
 
     def training_step(self, train_batch, batch_idx):
         x, y = train_batch
         _, logits_annot = self.forward(x)
         loss = F.cross_entropy(logits_annot, y, reduction="mean", ignore_index=-1)
+        self.log('train_loss', loss, prog_bar=True, on_epoch=True)
         return loss
 
     def validation_step(self, batch, batch_idx):

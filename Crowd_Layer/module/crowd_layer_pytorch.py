@@ -3,15 +3,12 @@ import torch.nn.functional as F
 from torch import nn
 
 
-class CrowdLayerModule(nn.Module):
+class CrowdLayerPytorch(nn.Module):
     def __init__(
             self,
             n_classes,
             n_annotators,
             gt_net,
-            optimizer_dict=None,
-            lr_scheduler=None,
-            lr_scheduler_dict=None,
     ):
         super().__init__()
         self.n_classes = n_classes
