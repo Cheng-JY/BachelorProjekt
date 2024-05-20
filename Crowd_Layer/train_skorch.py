@@ -17,6 +17,7 @@ from module.ground_truth_module import ClassifierModule
 from data_set.dataset import load_dataset
 
 import mlflow
+import time
 
 def seed_everything(seed=42):
     np.random.seed(seed)
@@ -71,7 +72,9 @@ if __name__ == '__main__':
 
         mlflow.log_params(hyper_dict)
 
+        start = time.time()
         net.fit(X_train, y_train)
+        end = time.time()
 
         y_train_pred = net.predict(X_train)
         train_accuracy = accuracy_score(y_train_true, y_train_pred) #
@@ -81,6 +84,7 @@ if __name__ == '__main__':
         metrics = {
             'train_accuracy': train_accuracy,
             'test_accuracy': test_accuracy,
+            'time': end - start
         }
 
         mlflow.log_metrics(metrics)

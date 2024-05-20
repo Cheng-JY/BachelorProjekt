@@ -13,6 +13,7 @@ from module.crowd_layer_pytorch import CrowdLayerPytorch
 from module.ground_truth_module import ClassifierModule
 from data_set.dataset import MusicDataSet
 from utils import *
+import time
 
 import mlflow
 
@@ -52,7 +53,7 @@ if __name__ == '__main__':
 
         gt_model = ClassifierModule(n_classes=n_classes, dropout=dropout)
         cl_model = CrowdLayerPytorch(n_classes=n_classes, n_annotators=n_annotators, gt_net=gt_model)
-        optimizer = optim.Adam(cl_model.parameters(), lr=hyper_dict['lr'], weight_decay=hyper_dict['optimizer__weight_decay'])
+        optimizer = optim.AdamW(cl_model.parameters(), lr=hyper_dict['lr'], weight_decay=hyper_dict['optimizer__weight_decay'])
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=hyper_dict['max_epochs'])
 
         hyper_dict['model_name'] = 'CrowdLayerPytorch'
@@ -60,6 +61,7 @@ if __name__ == '__main__':
 
         # Training Process
         loss_progess = []
+        start = time.time()
         for i in range(hyper_dict['max_epochs']):
             cl_model.train()
             epoch_loss = 0
@@ -70,9 +72,11 @@ if __name__ == '__main__':
                 epoch_loss += loss.item()
                 loss.backward()
                 optimizer.step()
+                scheduler.step()
 
             epoch_loss /= len(train_dataloader)
             loss_progess.append(epoch_loss)
+        end = time.time()
 
         with torch.no_grad():
             p_class_train, logits_annot_train = cl_model(X_train)
@@ -86,6 +90,7 @@ if __name__ == '__main__':
         metrics = {
             'train_accuracy': train_accuracy,
             'test_accuracy': test_accuracy,
+            'time': end - start
         }
 
         mlflow.log_metrics(metrics)
