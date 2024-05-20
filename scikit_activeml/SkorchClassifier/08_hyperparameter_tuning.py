@@ -92,7 +92,7 @@ if __name__ == '__main__':
         }
         lr_scheduler = LRScheduler(policy="CosineAnnealingLR", T_max=hyper_dict['max_epochs'])
 
-        nn_name = 'cl'
+        nn_name = 'lb'
         if nn_name == 'cl':
             gt_net = GroundTruthModule(n_classes=n_classes, dropout=0.0)
             net = CrowdLayerClassifier(
