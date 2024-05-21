@@ -18,12 +18,16 @@ def load_dataset():
 
 
 class MusicDataSet(Dataset):
-    def __init__(self, type: str):
+    def __init__(self, type: str, n_annotators=44):
         super(MusicDataSet, self).__init__()
 
         self.type = type
 
         X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset()
+
+        y_train_new = np.column_stack([y_train_true for _ in range(n_annotators)])
+        y_train_new[:, -1] = 0
+
 
         if type == 'train':
             self.X = X_train
@@ -34,11 +38,17 @@ class MusicDataSet(Dataset):
         elif type == 'test':
             self.X = X_test
             self.y = y_test_true
+        elif type == 'fake':
+            self.X = X_train
+            self.y = y_train_new
 
         self.y_train_true = y_train_true
 
     def return_X_y(self):
         return torch.tensor(self.X).float(), torch.tensor(self.y).long()
+
+    def return_X_y_numpy(self):
+        return self.X, self.y
 
     def return_y_train_true(self):
         return torch.tensor(self.y_train_true).float()

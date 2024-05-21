@@ -34,7 +34,7 @@ class CrowdLayerLightning(L.LightningModule):
 
         self.save_hyperparameters()
 
-    def forward(self, x):
+    def forward(self, x, return_logits_annot=True):
         """Forward propagation of samples through the GT and AP (optional) model.
 
         Parameters
@@ -54,6 +54,9 @@ class CrowdLayerLightning(L.LightningModule):
 
         # Compute class-membership probabilities.
         p_class = F.softmax(logit_class, dim=-1)
+
+        if not return_logits_annot:
+            return p_class
 
         # Compute logits per annotator.
         logits_annot = []
@@ -77,7 +80,7 @@ class CrowdLayerLightning(L.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
-        p_class, logits_annot = self.forward(x)
+        p_class = self.forward(x, return_logits_annot=False)
         y_pred = p_class.argmax(dim=-1)
         acc = (y_pred == y).float().mean()
         self.log("val_acc", acc, on_step=False, on_epoch=True, prog_bar=True)

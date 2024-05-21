@@ -27,10 +27,12 @@ if __name__ == '__main__':
         n_classes = 10
         dropout = 0.0
         n_annotators = 44
+        # n_annotators = 5
 
-        train_dataset = MusicDataSet('train')
-        valid_dataset = MusicDataSet('valid')
-        test_dataset = MusicDataSet('test')
+        train_dataset = MusicDataSet('train', n_annotators)
+        # train_dataset = MusicDataSet('fake', n_annotators)
+        valid_dataset = MusicDataSet('valid', n_annotators)
+        test_dataset = MusicDataSet('test', n_annotators)
 
         X_train, y_train = train_dataset.return_X_y()
         y_train_true = train_dataset.return_y_train_true()
@@ -58,24 +60,31 @@ if __name__ == '__main__':
         trainer.fit(cl_model, train_dataloaders=train_dl)
         end = time.time()
 
-        p_class_train, logits_annot_train = cl_model(X_train)
-        y_pred_train = predict(p_class_train)
-        train_accuracy = accuracy_score(y_train_true.numpy(), y_pred_train)
+        with torch.no_grad():
+            cl_model.eval()
+            p_class_train, logits_annot_train = cl_model(X_train)
+            y_pred_train = predict(p_class_train)
+            train_accuracy = accuracy_score(y_train_true.numpy(), y_pred_train)
 
-        p_class_test, logits_annot_test = cl_model(X_test)
-        y_pred_test = predict(p_class_test)
-        test_accuracy = accuracy_score(y_test.numpy(), y_pred_test)
+            p_class_test, logits_annot_test = cl_model(X_test)
+            y_pred_test = predict(p_class_test)
+            test_accuracy = accuracy_score(y_test.numpy(), y_pred_test)
+            P_anno = F.softmax(logits_annot_test, dim=1).detach().numpy()
+            P_class = p_class_test.detach().numpy()
+            print(P_anno[0])
+            print(P_class[0])
 
-        metrics = {
-            'train_accuracy': train_accuracy,
-            'test_accuracy': test_accuracy,
-            'time': end - start
-        }
+            metrics = {
+                'train_accuracy': train_accuracy,
+                'test_accuracy': test_accuracy,
+                'time': end - start
+            }
 
-        mlflow.log_metrics(metrics)
-        print(metrics)
+            mlflow.log_metrics(metrics)
+            print(metrics)
 
-        print(cl_model.annotator_layers[0].weight)
+            print(cl_model.annotator_layers[0].weight)
 
-        proba_annotator_pref = predict_annotator_perf(p_class_test[0:1], logits_annot_test[0:1])
-        print(proba_annotator_pref)
+            proba_annotator_pref = predict_annotator_perf(p_class_test[0:1], logits_annot_test[0:1])
+            print(proba_annotator_pref)
+
