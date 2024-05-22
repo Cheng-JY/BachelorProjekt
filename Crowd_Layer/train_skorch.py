@@ -14,7 +14,7 @@ from skorch.helper import predefined_split
 
 from module.crowd_layer_skorch import CrowdLayerSkorch
 from module.ground_truth_module import ClassifierModule
-from data_set.dataset import load_dataset
+from data_set.dataset import load_dataset, MusicDataSet
 
 import mlflow
 import time
@@ -39,8 +39,10 @@ if __name__ == '__main__':
     valid_ds = Dataset(X_valid, y_valid_true)
 
     mlflow.set_tracking_uri(uri='/Users/chengjiaying/BachelorProjekt/Crowd_Layer/tracking')
-    exp = mlflow.get_experiment_by_name(name='Crowd-Layer-05-19')
-    experiment_id = mlflow.create_experiment(name='Crowd-Layer-05-19') if exp is None else exp.experiment_id
+    # Crowd-Layer-4true1adversary
+    # Crowd-Layer-Training
+    exp = mlflow.get_experiment_by_name(name='Crowd-Layer-Training')
+    experiment_id = mlflow.create_experiment(name='Crowd-Layer-Training') if exp is None else exp.experiment_id
 
     with mlflow.start_run(experiment_id=experiment_id):
         hyper_dict = {
@@ -51,9 +53,12 @@ if __name__ == '__main__':
         }
         lr_scheduler = LRScheduler(policy="CosineAnnealingLR", T_max=hyper_dict['max_epochs'])
 
+        n_annotators = 44
+        # n_annotators = 5
+
         gt_net = ClassifierModule(n_classes=n_classes, dropout=0.0)
         net = CrowdLayerSkorch(
-            module__n_annotators=44,
+            module__n_annotators=n_annotators,
             module__gt_net=gt_net,
             classes=dataset_classes,
             missing_label=MISSING_LABEL,
@@ -70,8 +75,10 @@ if __name__ == '__main__':
         net.initialize()
         print(net.lr)
 
+        hyper_dict['model_name'] = 'CrowdLayerSkorch'
         mlflow.log_params(hyper_dict)
 
+        # X_train, y_train = MusicDataSet('fake', n_annotators).return_X_y_numpy()
         start = time.time()
         net.fit(X_train, y_train)
         end = time.time()
@@ -86,6 +93,11 @@ if __name__ == '__main__':
             'test_accuracy': test_accuracy,
             'time': end - start
         }
+
+        p_class = net.predict_proba(X_test)
+        p_annot = net.predict_P_annot(X_test)
+        # np.savetxt('p_annot_skorch.csv', p_annot[0])
+        # np.savetxt('p_class_skorch.csv', p_class[0])
 
         mlflow.log_metrics(metrics)
         print(metrics)

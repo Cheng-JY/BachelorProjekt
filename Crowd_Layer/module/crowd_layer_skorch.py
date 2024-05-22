@@ -69,6 +69,12 @@ class CrowdLayerSkorch(SkorchClassifier, AnnotatorModelMixin):
             'y_pred': y_pred,
         }
 
+    def predict_P_annot(self, X):
+        _, logits_annot = self.forward(X)
+        P_annot = F.softmax(logits_annot, dim=1)
+        P_annot = P_annot.numpy()
+        return P_annot
+
 
 class CrowdLayerModule(nn.Module):
     def __init__(

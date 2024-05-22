@@ -21,8 +21,10 @@ if __name__ == '__main__':
     seed_everything(42)
 
     mlflow.set_tracking_uri(uri='/Users/chengjiaying/BachelorProjekt/Crowd_Layer/tracking')
-    exp = mlflow.get_experiment_by_name(name='Crowd-Layer-05-19')
-    experiment_id = mlflow.create_experiment(name='Crowd-Layer-05-19') if exp is None else exp.experiment_id
+    # Crowd-Layer-4true1adversary
+    # Crowd-Layer-Training
+    exp = mlflow.get_experiment_by_name(name='Crowd-Layer-4true1adversary')
+    experiment_id = mlflow.create_experiment(name='Crowd-Layer-4true1adversary') if exp is None else exp.experiment_id
     print(experiment_id)
 
     with mlflow.start_run(experiment_id=experiment_id):
@@ -36,9 +38,11 @@ if __name__ == '__main__':
 
         n_classes = 10
         dropout = 0.0
-        n_annotators = 44
+        # n_annotators = 44
+        n_annotators = 5
 
-        train_dataset = MusicDataSet('train')
+        # train_dataset = MusicDataSet('train', n_annotators=n_annotators)
+        train_dataset = MusicDataSet('fake', n_annotators)
         valid_dataset = MusicDataSet('valid')
         test_dataset = MusicDataSet('test')
 
@@ -86,6 +90,7 @@ if __name__ == '__main__':
             p_class_test, logits_annot_test = cl_model(X_test)
             y_pred_test = predict(p_class_test)
             test_accuracy = accuracy_score(y_test.numpy(), y_pred_test)
+            p_annot = F.softmax(logits_annot_test, dim=1)
 
         metrics = {
             'train_accuracy': train_accuracy,
@@ -100,6 +105,9 @@ if __name__ == '__main__':
 
         proba_annotator_pref = predict_annotator_perf(p_class_test[0:1], logits_annot_test[0:1])
         print(proba_annotator_pref)
+
+        # write_experiment_result(p_class_test, 'p_class_pytorch.csv')
+        # write_experiment_result(p_annot, 'p_annot_pytorch.csv')
 
         plt.plot(loss_progess)
         plt.title(f'train: {metrics["train_accuracy"]}; test: {metrics["test_accuracy"]}')

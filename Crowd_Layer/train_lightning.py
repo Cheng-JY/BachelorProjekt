@@ -12,8 +12,10 @@ if __name__ == '__main__':
     seed_everything(42)
 
     mlflow.set_tracking_uri(uri='/Users/chengjiaying/BachelorProjekt/Crowd_Layer/tracking')
-    exp = mlflow.get_experiment_by_name(name='Crowd-Layer-05-19')
-    experiment_id = mlflow.create_experiment(name='Crowd-Layer-05-19') if exp is None else exp.experiment_id
+    # Crowd-Layer-4true1adversary
+    # Crowd-Layer-Training
+    exp = mlflow.get_experiment_by_name(name='Crowd-Layer-Training')
+    experiment_id = mlflow.create_experiment(name='Crowd-Layer-Training') if exp is None else exp.experiment_id
     print(experiment_id)
 
     with mlflow.start_run(experiment_id=experiment_id):
@@ -69,10 +71,10 @@ if __name__ == '__main__':
             p_class_test, logits_annot_test = cl_model(X_test)
             y_pred_test = predict(p_class_test)
             test_accuracy = accuracy_score(y_test.numpy(), y_pred_test)
-            P_anno = F.softmax(logits_annot_test, dim=1).detach().numpy()
-            P_class = p_class_test.detach().numpy()
-            print(P_anno[0])
-            print(P_class[0])
+            P_anno = F.softmax(logits_annot_test, dim=1)
+
+            # write_experiment_result(p_class_test, 'p_class_lightning.csv')
+            # write_experiment_result(P_anno, 'p_annot_lightning.csv')
 
             metrics = {
                 'train_accuracy': train_accuracy,
