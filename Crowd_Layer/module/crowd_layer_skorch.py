@@ -9,7 +9,7 @@ from skorch import NeuralNet
 from skorch.dataset import unpack_data
 from torch import nn
 from torch.nn import CrossEntropyLoss
-from skactiveml.utils import unlabeled_indices
+from skactiveml.utils import ExtLabelEncoder
 
 from .skorch_classifier import SkorchClassifier
 
@@ -32,11 +32,8 @@ class CrowdLayerSkorch(SkorchClassifier, AnnotatorModelMixin):
         return loss
 
     def fit(self, X, y, **fit_params):
-        # utils _label_encode.fit_transform
-        # _valid_data() in Skactivml
-
-        is_unlbld = unlabeled_indices(y, self.missing_label)
-        y[is_unlbld[:,0], is_unlbld[:,1]] = -1
+        label_encoder = ExtLabelEncoder(classes=self.classes, missing_label=self.missing_label)
+        y = label_encoder.fit_transform(y)
         return NeuralNet.fit(self, X, y, **fit_params)
 
     def predict_annotator_perf(self, X, return_confusion_matrix=False):
