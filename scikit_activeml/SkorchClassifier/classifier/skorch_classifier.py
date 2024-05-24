@@ -33,8 +33,7 @@ class SkorchClassifier(NeuralNet, SkactivemlClassifier):
         )
 
     def get_loss(self, y_pred, y_true, *args, **kwargs):
-        loss = super(SkorchClassifier, self).get_loss(y_pred, y_true, *args, **kwargs)
-        return loss
+        return super(SkorchClassifier, self).get_loss(y_pred, y_true, *args, **kwargs)
 
     def fit(self, X, y, **fit_params):
         # check input parameters
@@ -73,6 +72,18 @@ class SkorchClassifier(NeuralNet, SkactivemlClassifier):
 
         self.initialized_ = True
         return self
+
+    def predict_proba(self, X, predict_nonlinearity:callable=None, **kwargs):
+        # Alternative 1: pass the parameter ```predict_nonlinearity: callable``` by instance creation
+        # original from Skorch, actually, in the instance predict_nonlinearity='auto',  When set to ‘auto’,
+        # infers the correct nonlinearity based on the criterion
+        # (softmax for CrossEntropyLoss and sigmoid for BCEWithLogitsLoss).
+        # see: https://skorch.readthedocs.io/en/stable/classifier.html# (search: predict_nonlinearity)
+
+        # Alternative 2: pass the ```predict_nonlinearity: callable``` in the predict_proba function and also the
+        # corresponding arguments for this callable.
+        return super(SkorchClassifier, self).predict_proba(X)
+
 
     def predict(self, X):
         return SkactivemlClassifier.predict(self, X)

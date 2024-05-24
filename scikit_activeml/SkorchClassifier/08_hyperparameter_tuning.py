@@ -160,6 +160,8 @@ if __name__ == '__main__':
         y_train_pred = net.predict(X_train)
         train_accuracy = accuracy_score(y_train_true, y_train_pred)
 
+        p_pred = net.predict_proba(X_test)
+        print(p_pred[0])
         y_pred = net.predict(X_test)
         test_accuracy = accuracy_score(y_pred, y_test_true)
         metrics = {
