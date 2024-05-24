@@ -30,7 +30,7 @@ if __name__ == '__main__':
     with mlflow.start_run(experiment_id=experiment_id):
 
         hyper_dict = {
-            'max_epochs': 250,
+            'max_epochs': 50,
             'batch_size': 64,
             'lr': 0.001,
             'optimizer__weight_decay': 0.0001
@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
         gt_model = ClassifierModule(n_classes=n_classes, dropout=dropout)
         cl_model = CrowdLayerPytorch(n_classes=n_classes, n_annotators=n_annotators, gt_net=gt_model)
-        optimizer = optim.AdamW(cl_model.parameters(), lr=hyper_dict['lr'], weight_decay=hyper_dict['optimizer__weight_decay'])
+        optimizer = optim.RAdam(cl_model.parameters(), lr=hyper_dict['lr'], weight_decay=hyper_dict['optimizer__weight_decay'])
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=hyper_dict['max_epochs'])
 
         hyper_dict['model_name'] = 'CrowdLayerPytorch'

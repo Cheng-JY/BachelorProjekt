@@ -25,7 +25,7 @@ def seed_everything(seed=42):
 
 
 if __name__ == '__main__':
-    seed = 42
+    seed = 0
     MISSING_LABEL = -1
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -46,17 +46,17 @@ if __name__ == '__main__':
 
     with mlflow.start_run(experiment_id=experiment_id):
         hyper_dict = {
-            'max_epochs': 250,
+            'max_epochs': 50,
             'batch_size': 64,
             'lr': 0.01,
-            'optimizer__weight_decay': 0.0001
+            'optimizer__weight_decay': 0.0
         }
         lr_scheduler = LRScheduler(policy="CosineAnnealingLR", T_max=hyper_dict['max_epochs'])
 
         n_annotators = 44
         # n_annotators = 5
 
-        gt_net = ClassifierModule(n_classes=n_classes, dropout=0.0)
+        gt_net = ClassifierModule(n_classes=n_classes, dropout=0.5)
         net = CrowdLayerSkorch(
             module__n_annotators=n_annotators,
             module__gt_net=gt_net,
@@ -66,7 +66,7 @@ if __name__ == '__main__':
             random_state=1,
             train_split=predefined_split(valid_ds),
             verbose=False,
-            optimizer=torch.optim.AdamW,
+            optimizer=torch.optim.RAdam,
             device=device,
             callbacks=[lr_scheduler],
             **hyper_dict,
@@ -109,6 +109,6 @@ if __name__ == '__main__':
 
         history = net.history
         train_loss = history[:, 'train_loss']
-        # plt.plot(train_loss)
-        # plt.title(f'train: {metrics["train_accuracy"]}; test: {metrics["test_accuracy"]}')
-        # plt.show()
+        plt.plot(train_loss)
+        plt.title(f'train: {metrics["train_accuracy"]}; test: {metrics["test_accuracy"]}')
+        plt.show()

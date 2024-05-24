@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset
 
 
@@ -13,6 +14,11 @@ def load_dataset():
     y_valid_true = np.load(f'{data_dir}/music-y-true-valid.npy')
     X_test = np.load(f'{data_dir}/music-X-test.npy')
     y_test_true = np.load(f'{data_dir}/music-y-true-test.npy')
+
+    sc = StandardScaler().fit(X_train)
+    X_train = sc.transform(X_train)
+    X_valid = sc.transform(X_valid)
+    X_test = sc.transform(X_test)
 
     return X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true
 
