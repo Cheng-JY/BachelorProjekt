@@ -80,14 +80,14 @@ if __name__ == '__main__':
     valid_ds = Dataset(X_valid, y_valid_true)
 
     mlflow.set_tracking_uri(uri="/Users/chengjiaying/BachelorProjekt/scikit_activeml/SkorchClassifier/tracking")
-    exp = mlflow.get_experiment_by_name(name="Hyperparameter-Tuning-05-18")
-    experiment_id = mlflow.create_experiment(name="Hyperparameter-Tuning-05-18") if exp is None else exp.experiment_id
+    exp = mlflow.get_experiment_by_name(name="Hyperparameter-Tuning-with-lrs")
+    experiment_id = mlflow.create_experiment(name="Hyperparameter-Tuning-with-lrs") if exp is None else exp.experiment_id
 
     with (mlflow.start_run(experiment_id=experiment_id) as active_run):
         hyper_dict = {
-            'max_epochs': 200,
+            'max_epochs': 250,
             'batch_size': 64,
-            'lr': 0.01,
+            'lr': 0.001,
             'optimizer__weight_decay': 0.0001
         }
         lr_scheduler = LRScheduler(policy="CosineAnnealingLR", T_max=hyper_dict['max_epochs'])
