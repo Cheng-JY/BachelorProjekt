@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
         # trainer = L.Trainer(max_epochs=hyper_dict['max_epochs'], barebones=True)
         # for compare with pytorch
-        trainer = L.Trainer(max_epochs=hyper_dict['max_epochs'], profiler="simple")
+        trainer = L.Trainer(max_epochs=hyper_dict['max_epochs'])
         start = time.time()
         trainer.fit(cl_model, train_dataloaders=train_dl)
         end = time.time()
