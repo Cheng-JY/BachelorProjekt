@@ -22,8 +22,8 @@ if __name__ == '__main__':
         hyper_dict = {
             'max_epochs': 250,
             'batch_size': 64,
-            'lr': 0.01,
-            'optimizer__weight_decay': 0.0001
+            'lr': 0.005,
+            'optimizer__weight_decay': 0.001
         }
 
         n_classes = 10
@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
         # trainer = L.Trainer(max_epochs=hyper_dict['max_epochs'], barebones=True)
         # for compare with pytorch
-        trainer = L.Trainer(max_epochs=hyper_dict['max_epochs'])
+        trainer = L.Trainer(max_epochs=hyper_dict['max_epochs'], profiler="simple")
         start = time.time()
         trainer.fit(cl_model, train_dataloaders=train_dl)
         end = time.time()

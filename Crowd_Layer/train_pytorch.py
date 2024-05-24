@@ -23,8 +23,8 @@ if __name__ == '__main__':
     mlflow.set_tracking_uri(uri='/Users/chengjiaying/BachelorProjekt/Crowd_Layer/tracking')
     # Crowd-Layer-4true1adversary
     # Crowd-Layer-Training
-    exp = mlflow.get_experiment_by_name(name='Crowd-Layer-4true1adversary')
-    experiment_id = mlflow.create_experiment(name='Crowd-Layer-4true1adversary') if exp is None else exp.experiment_id
+    exp = mlflow.get_experiment_by_name(name='Crowd-Layer-Training')
+    experiment_id = mlflow.create_experiment(name='Crowd-Layer-Training') if exp is None else exp.experiment_id
     print(experiment_id)
 
     with mlflow.start_run(experiment_id=experiment_id):
@@ -38,11 +38,11 @@ if __name__ == '__main__':
 
         n_classes = 10
         dropout = 0.0
-        # n_annotators = 44
-        n_annotators = 5
+        n_annotators = 44
+        # n_annotators = 5
 
-        # train_dataset = MusicDataSet('train', n_annotators=n_annotators)
-        train_dataset = MusicDataSet('fake', n_annotators)
+        train_dataset = MusicDataSet('train', n_annotators=n_annotators)
+        # train_dataset = MusicDataSet('fake', n_annotators)
         valid_dataset = MusicDataSet('valid')
         test_dataset = MusicDataSet('test')
 

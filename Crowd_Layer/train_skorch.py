@@ -109,6 +109,6 @@ if __name__ == '__main__':
 
         history = net.history
         train_loss = history[:, 'train_loss']
-        plt.plot(train_loss)
-        plt.title(f'train: {metrics["train_accuracy"]}; test: {metrics["test_accuracy"]}')
-        plt.show()
+        # plt.plot(train_loss)
+        # plt.title(f'train: {metrics["train_accuracy"]}; test: {metrics["test_accuracy"]}')
+        # plt.show()
