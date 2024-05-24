@@ -92,7 +92,7 @@ class CrowdLayerModule(nn.Module):
         self.annotator_layers = nn.ModuleList()
         for i in range(n_annotators):
             layer = nn.Linear(n_classes, n_classes, bias=False)
-            layer.weight = nn.Parameter(torch.eye(n_classes) * 10)
+            layer.weight = nn.Parameter(torch.eye(n_classes))
             self.annotator_layers.append(layer)
 
     def forward(self, x):
