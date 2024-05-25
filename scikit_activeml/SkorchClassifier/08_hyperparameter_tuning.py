@@ -80,6 +80,8 @@ if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     seed_everything(seed)
     X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_datasets()
+    print(X_train.__class__)
+    print(y_train_true[0].__class__)
 
     dataset_classes = np.unique(y_test_true)
     n_classes = len(dataset_classes)
@@ -130,6 +132,7 @@ if __name__ == '__main__':
                 optimizer=torch.optim.RAdam,
                 device=device,
                 callbacks=[lr_scheduler],
+                module__n_classes=len(dataset_classes),
                 **hyper_dict
             )
             y_train = y_train_true
@@ -146,6 +149,7 @@ if __name__ == '__main__':
                 optimizer=torch.optim.RAdam,
                 device=device,
                 callbacks=[lr_scheduler],
+                module__n_classes=len(dataset_classes),
                 **hyper_dict
             )
             y_train = majority_vote(y_train, classes=dataset_classes, missing_label=-1)

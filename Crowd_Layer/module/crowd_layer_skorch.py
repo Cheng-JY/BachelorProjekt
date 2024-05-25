@@ -61,11 +61,6 @@ class CrowdLayerSkorch(SkorchClassifier, AnnotatorModelMixin):
             return P_perf
         return P_perf.diagonal(axis1=-2, axis2=-1).sum(axis=-1)
 
-    def predict(self, X):
-        # maybe flag to switch between mode
-        p_class, logits_annot = self.forward(X)
-        return p_class.argmax(axis=1)
-
     def predict_proba(self, X):
         P_class, logits_annot = self.forward(X)
         P_class = P_class.numpy()
@@ -73,10 +68,12 @@ class CrowdLayerSkorch(SkorchClassifier, AnnotatorModelMixin):
 
     def validation_step(self, batch, **fit_params):
         # not for loss but for acc
+        print(batch.__class__)
         Xi, yi = unpack_data(batch)
         with torch.no_grad():
             y_pred = self.predict(Xi)
-            acc = torch.mean((y_pred == yi).float())
+            y_pred_tensor = torch.from_numpy(y_pred)
+            acc = torch.mean((y_pred_tensor == yi).float())
         return {
             'loss': acc,
             'y_pred': y_pred,

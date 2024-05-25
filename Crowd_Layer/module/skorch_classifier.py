@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 
 from skactiveml.base import SkactivemlClassifier
@@ -50,13 +52,17 @@ class SkorchClassifier(NeuralNet, SkactivemlClassifier):
 
         is_lbld = is_labeled(y, missing_label=self.missing_label)
         try:
-            X_lbld = X[is_lbld]
-            y_lbld = y[is_lbld].astype(np.int64)
-            super(SkorchClassifier, self).fit(X_lbld, y_lbld, **fit_params)
-            self.is_fitted = True
-            return self
+            if np.sum(is_lbld) == 0:
+                raise ValueError("There is no labeled data.")
+            else:
+                X_lbld = X[is_lbld]
+                y_lbld = y[is_lbld].astype(np.int64)
+                return super(SkorchClassifier, self).fit(X_lbld, y_lbld, **fit_params)
         except Exception as e:
-            self.is_fitted_ = False
+            warnings.warn(
+                "The 'base_estimator' could not be fitted because of"
+                " '{}'. ".format(e)
+            )
             return self
 
     def initialize(self):
@@ -72,7 +78,7 @@ class SkorchClassifier(NeuralNet, SkactivemlClassifier):
         self.initialized_ = True
         return self
 
-    def predict_proba(self, X, predict_nonlinearity:callable=None, **kwargs):
+    def predict_proba(self, X, predict_nonlinearity: callable = None, **kwargs):
         # Alternative 1: pass the parameter ```predict_nonlinearity: callable``` by instance creation
         # original from Skorch, actually, in the instance predict_nonlinearity='auto',  When set to ‘auto’,
         # infers the correct nonlinearity based on the criterion
@@ -83,14 +89,5 @@ class SkorchClassifier(NeuralNet, SkactivemlClassifier):
         # corresponding arguments for this callable.
         return super(SkorchClassifier, self).predict_proba(X)
 
-
     def predict(self, X):
-        check_is_fitted(self)
-        if self.is_fitted:
-            return SkactivemlClassifier.predict(self, X)
-        else:
-            p = self.predict_proba([X[0]])[0]
-            y_pred = self.random_state_.choice(
-                np.arange(len(self.classes_)), len(X), replace=True, p=p
-            )
-            return y_pred
+        return SkactivemlClassifier.predict(self, X)

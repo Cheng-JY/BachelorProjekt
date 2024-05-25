@@ -22,11 +22,10 @@ class CrowdLayerClassifier(SkorchClassifier, AnnotatorModelMixin):
             **kwargs,
         )
 
-    def get_loss(self, y_pred, y_true, *args, **kwargs):
+    def get_loss(self, y_pred, y_true):
         # unpack the tuple from the forward function
         p_class, logits_annot = y_pred
-        loss = NeuralNet.get_loss(self, logits_annot, y_true, *args, **kwargs)
-        return loss
+        return NeuralNet.get_loss(self, logits_annot, y_true)
 
     def fit(self, X, y, **fit_params):
 

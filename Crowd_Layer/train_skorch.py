@@ -89,6 +89,7 @@ if __name__ == '__main__':
         train_accuracy = accuracy_score(y_train_true, y_train_pred) #
 
         y_pred = net.predict(X_test)
+        print(y_pred.__class__)
         test_accuracy = accuracy_score(y_pred, y_test_true)
         metrics = {
             'train_accuracy': train_accuracy,
