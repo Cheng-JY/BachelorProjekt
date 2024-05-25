@@ -29,8 +29,22 @@ class CrowdLayerClassifier(SkorchClassifier, AnnotatorModelMixin):
         return loss
 
     def fit(self, X, y, **fit_params):
-        label_encoder = ExtLabelEncoder(classes=self.classes, missing_label=self.missing_label)
-        y = label_encoder.fit_transform(y)
+
+        self.check_X_dict_ = {
+            "ensure_min_samples": 0,
+            "ensure_min_features": 0,
+            "allow_nd": True,
+            "dtype": None,
+        }
+        X, y, _ = self._validate_data(
+            X=X,
+            y=y,
+            check_X_dict=self.check_X_dict_,
+            y_ensure_1d=False,
+        )
+
+        self._check_n_features(X, reset=True)
+
         return NeuralNet.fit(self, X, y, **fit_params)
 
     def predict_annotator_perf(self, X, return_confusion_matrix=False):
@@ -47,13 +61,12 @@ class CrowdLayerClassifier(SkorchClassifier, AnnotatorModelMixin):
 
     def predict(self, X):
         # maybe flag to switch between mode
-        p_class, logits_annot = self.forward(X)
+        p_class = self.predict_proba(X)
         return p_class.argmax(axis=1)
 
     def predict_proba(self, X):
-        P_class, logits_annot = self.forward(X)
-        P_class = P_class.numpy()
-        return P_class
+        p_class = self.forward(X, return_logits_annotators=False)
+        return p_class.numpy()
 
     def validation_step(self, batch, **fit_params):
         # not for loss but for acc
@@ -62,7 +75,7 @@ class CrowdLayerClassifier(SkorchClassifier, AnnotatorModelMixin):
             y_pred = self.predict(Xi)
             acc = torch.mean((y_pred == yi).float())
         return {
-            'loss': acc,
+            'acc': acc,
             'y_pred': y_pred,
         }
 
@@ -86,7 +99,7 @@ class CrowdLayerModule(nn.Module):
             layer.weight = nn.Parameter(torch.eye(n_classes) * 10)
             self.annotator_layers.append(layer)
 
-    def forward(self, x):
+    def forward(self, x, return_logits_annotators=True):
         """Forward propagation of samples through the GT and AP (optional) model.
 
         Parameters
@@ -108,6 +121,9 @@ class CrowdLayerModule(nn.Module):
 
         # Compute class-membership probabilities.
         p_class = F.softmax(logit_class, dim=-1)
+
+        if not return_logits_annotators:
+            return p_class
 
         # Compute logits per annotator.
         logits_annot = []

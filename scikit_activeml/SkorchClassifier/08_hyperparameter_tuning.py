@@ -149,13 +149,12 @@ if __name__ == '__main__':
                 **hyper_dict
             )
             y_train = majority_vote(y_train, classes=dataset_classes, missing_label=-1)
-        net.initialize()
-        print(net.lr)
 
         hyper_dict['nn_name'] = nn_name
         mlflow.log_params(hyper_dict)
 
         net.fit(X_train, y_train)
+        print(net.lr)
 
         y_train_pred = net.predict(X_train)
         train_accuracy = accuracy_score(y_train_true, y_train_pred)

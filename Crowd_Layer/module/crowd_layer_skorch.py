@@ -9,7 +9,6 @@ from skorch import NeuralNet
 from skorch.dataset import unpack_data
 from torch import nn
 from torch.nn import CrossEntropyLoss
-from skactiveml.utils import ExtLabelEncoder
 
 from .skorch_classifier import SkorchClassifier
 
@@ -32,8 +31,22 @@ class CrowdLayerSkorch(SkorchClassifier, AnnotatorModelMixin):
         return loss
 
     def fit(self, X, y, **fit_params):
-        label_encoder = ExtLabelEncoder(classes=self.classes, missing_label=self.missing_label)
-        y = label_encoder.fit_transform(y)
+
+        self.check_X_dict_ = {
+            "ensure_min_samples": 0,
+            "ensure_min_features": 0,
+            "allow_nd": True,
+            "dtype": None,
+        }
+        X, y, _ = self._validate_data(
+            X=X,
+            y=y,
+            check_X_dict=self.check_X_dict_,
+            y_ensure_1d=False,
+        )
+
+        self._check_n_features(X, reset=True)
+
         return NeuralNet.fit(self, X, y, **fit_params)
 
     def predict_annotator_perf(self, X, return_confusion_matrix=False):

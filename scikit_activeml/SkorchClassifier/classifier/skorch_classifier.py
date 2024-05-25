@@ -3,6 +3,7 @@ import numpy as np
 from skactiveml.base import SkactivemlClassifier
 from skorch import NeuralNet
 from skactiveml.utils import is_labeled, MISSING_LABEL
+from sklearn.utils.validation import check_is_fitted
 
 
 class SkorchClassifier(NeuralNet, SkactivemlClassifier):
@@ -32,9 +33,6 @@ class SkorchClassifier(NeuralNet, SkactivemlClassifier):
             random_state=random_state,
         )
 
-    def get_loss(self, y_pred, y_true, *args, **kwargs):
-        return super(SkorchClassifier, self).get_loss(y_pred, y_true, *args, **kwargs)
-
     def fit(self, X, y, **fit_params):
         # check input parameters
         self.check_X_dict_ = {
@@ -55,7 +53,9 @@ class SkorchClassifier(NeuralNet, SkactivemlClassifier):
         try:
             X_lbld = X[is_lbld]
             y_lbld = y[is_lbld].astype(np.int64)
-            return super(SkorchClassifier, self).fit(X_lbld, y_lbld, **fit_params)
+            super(SkorchClassifier, self).fit(X_lbld, y_lbld, **fit_params)
+            self.is_fitted = True
+            return self
         except Exception as e:
             self.is_fitted_ = False
             return self
@@ -86,4 +86,12 @@ class SkorchClassifier(NeuralNet, SkactivemlClassifier):
 
 
     def predict(self, X):
-        return SkactivemlClassifier.predict(self, X)
+        check_is_fitted(self)
+        if self.is_fitted:
+            return SkactivemlClassifier.predict(self, X)
+        else:
+            p = self.predict_proba([X[0]])[0]
+            y_pred = self.random_state_.choice(
+                np.arange(len(self.classes_)), len(X), replace=True, p=p
+            )
+            return y_pred

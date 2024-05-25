@@ -25,12 +25,14 @@ def seed_everything(seed=42):
 
 
 if __name__ == '__main__':
-    seed = 10
-    MISSING_LABEL = -1
+    seed = 0
+    MISSING_LABEL = 200
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     seed_everything(seed)
     X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset()
+
+    y_train[y_train == -1] = 200
 
     dataset_classes = np.unique(y_test_true)
     n_classes = len(dataset_classes)
