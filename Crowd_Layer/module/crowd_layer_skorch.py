@@ -68,7 +68,6 @@ class CrowdLayerSkorch(SkorchClassifier, AnnotatorModelMixin):
 
     def validation_step(self, batch, **fit_params):
         # not for loss but for acc
-        print(batch.__class__)
         Xi, yi = unpack_data(batch)
         with torch.no_grad():
             y_pred = self.predict(Xi)

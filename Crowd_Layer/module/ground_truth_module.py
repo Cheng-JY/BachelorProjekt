@@ -3,12 +3,12 @@ from torch import nn
 
 
 class ClassifierModule(nn.Module):
-    def __init__(self, n_classes, dropout):
+    def __init__(self, n_classes, n_features, dropout):
         super(ClassifierModule, self).__init__()
         n_hidden_neurons_1 = 256
         n_hidden_neurons_2 = 128
         self.embed_X_block = nn.Sequential(
-            nn.Linear(in_features=124, out_features=n_hidden_neurons_1),
+            nn.Linear(in_features=n_features, out_features=n_hidden_neurons_1),
             nn.BatchNorm1d(num_features=n_hidden_neurons_1),
             nn.ReLU(),
             nn.Dropout(p=dropout),

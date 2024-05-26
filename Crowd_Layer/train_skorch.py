@@ -14,7 +14,7 @@ from skorch.helper import predefined_split
 
 from module.crowd_layer_skorch import CrowdLayerSkorch
 from module.ground_truth_module import ClassifierModule
-from data_set.dataset import load_dataset, MusicDataSet
+from data_set.dataset import load_dataset_music, MusicDataSet
 
 import mlflow
 import time
@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     seed_everything(seed)
-    X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset()
+    X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_music()
 
     y_train[y_train == -1] = 200
 
@@ -58,9 +58,10 @@ if __name__ == '__main__':
         n_annotators = 44
         # n_annotators = 5
 
-        gt_net = ClassifierModule(n_classes=n_classes, dropout=0.5)
+        gt_net = ClassifierModule(n_classes=n_classes, n_features=n_features, dropout=0.5)
         net = CrowdLayerSkorch(
             module__n_annotators=n_annotators,
+            module__n_classes=n_classes,
             module__gt_net=gt_net,
             classes=dataset_classes,
             missing_label=MISSING_LABEL,
@@ -89,7 +90,6 @@ if __name__ == '__main__':
         train_accuracy = accuracy_score(y_train_true, y_train_pred) #
 
         y_pred = net.predict(X_test)
-        print(y_pred.__class__)
         test_accuracy = accuracy_score(y_pred, y_test_true)
         metrics = {
             'train_accuracy': train_accuracy,
