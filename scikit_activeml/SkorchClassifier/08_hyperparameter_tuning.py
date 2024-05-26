@@ -9,10 +9,8 @@ import numpy as np
 import pandas as pd
 import torch
 
-from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import StandardScaler
 from torch import nn
-import torch.nn.functional as F
 from skorch.dataset import Dataset
 from skorch.helper import predefined_split
 
@@ -157,16 +155,19 @@ if __name__ == '__main__':
         hyper_dict['nn_name'] = nn_name
         mlflow.log_params(hyper_dict)
 
+        # y_train[:100] = -1
         net.fit(X_train, y_train)
         print(net.lr)
 
-        y_train_pred = net.predict(X_train)
-        train_accuracy = accuracy_score(y_train_true, y_train_pred)
+        # y_train_pred = net.predict(X_train)
+        # train_accuracy = accuracy_score(y_train_true, y_train_pred)
+        train_accuracy = net.score(X_train, y_train_true)
 
         p_pred = net.predict_proba(X_test)
         print(p_pred[0])
-        y_pred = net.predict(X_test)
-        test_accuracy = accuracy_score(y_pred, y_test_true)
+        # y_pred = net.predict(X_test)
+        # test_accuracy = accuracy_score(y_pred, y_test_true)
+        test_accuracy = net.score(X_test, y_test_true)
         metrics = {
             'train_accuracy': train_accuracy,
             'test_accuracy': test_accuracy,

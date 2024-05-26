@@ -10,6 +10,48 @@ from sklearn.utils.validation import check_is_fitted
 
 
 class SkorchClassifier(NeuralNet, SkactivemlClassifier):
+    """SkorchClassifier
+
+    Implement a wrapper class, to make it possible to use `PyTorch` with
+    `skactiveml`. This is achieved by providing a wrapper around `PyTorch`
+    that has a skactiveml interface and also be able to handle missing labels.
+    This wrapper is based on the open-source library `skorch` [1].
+
+    Parameters
+    ----------
+    module : torch module (class or instance)
+      A PyTorch :class:`~torch.nn.Module`. In general, the
+      uninstantiated class should be passed, although instantiated
+      modules will also work.
+    criterion : torch criterion (class)
+      The uninitialized criterion (loss) used to optimize the
+      module.
+    *args: arguments
+        more possible arguments for initialize your neural network
+        see: https://skorch.readthedocs.io/en/stable/net.html
+    classes : array-like of shape (n_classes,), default=None
+        Holds the label for each class. If none, the classes are determined
+        during the fit.
+    missing_label : scalar or string or np.nan or None, default=np.nan
+        Value to represent a missing label.
+    cost_matrix : array-like of shape (n_classes, n_classes)
+        Cost matrix with `cost_matrix[i,j]` indicating cost of predicting class
+        `classes[j]` for a sample of class `classes[i]`. Can be only set, if
+        `classes` is not none.
+    random_state : int or RandomState instance or None, default=None
+        Determines random number for 'predict' method. Pass an int for
+        reproducible results across multiple method calls.
+    **kwargs : keyword arguments
+        more possible parameters to customizing your neural network
+        see: https://skorch.readthedocs.io/en/stable/net.html
+
+    References
+    ----------
+    [1] Marian Tietz, Thomas J. Fan, Daniel Nouri, Benjamin Bossan, and
+    skorch Developers. skorch: A scikit-learn compatible neural network
+    library that wraps PyTorch, July 2017.
+    """
+
     def __init__(
         self,
         module,
@@ -44,28 +86,6 @@ class SkorchClassifier(NeuralNet, SkactivemlClassifier):
         # self.initialize()
 
     def fit(self, X, y, **fit_params):
-        """Initialize and fit the module.
-
-        If the module was already initialized, by calling fit, the
-        module will be re-initialized (unless ``warm_start`` is True).
-
-        Parameters
-        ----------
-        X : matrix-like, shape (n_samples, n_features)
-            Training data set, usually complete, i.e. including the labeled and
-            unlabeled samples
-        y : array-like of shape (n_samples, )
-            Labels of the training data set (possibly including unlabeled ones
-            indicated by self.missing_label)
-        fit_params : dict-like
-            Further parameters as input to the 'fit' method of the 'estimator'.
-
-        Returns
-        -------
-        self: SkorchClassifier,
-            The SkorchClassifier is fitted on the training data.
-        """
-
         # check input parameters
         self.check_X_dict_ = {
             "ensure_min_samples": 0,
@@ -80,21 +100,15 @@ class SkorchClassifier(NeuralNet, SkactivemlClassifier):
         )
 
         is_lbld = is_labeled(y, missing_label=self.missing_label)
-        try:
-            if np.sum(is_lbld) == 0:
-                raise ValueError("There is no labeled data.")
-            else:
-                X_lbld = X[is_lbld]
-                y_lbld = y[is_lbld].astype(np.int64)
-                return super(SkorchClassifier, self).fit(
-                    X_lbld, y_lbld, **fit_params
-                )
-        except Exception as e:
-            warnings.warn(
-                "The 'base_estimator' could not be fitted because of"
-                " '{}'. ".format(e)
+
+        if np.sum(is_lbld) == 0:
+            raise ValueError("There is no labeled data.")
+        else:
+            X_lbld = X[is_lbld]
+            y_lbld = y[is_lbld].astype(np.int64)
+            return super(SkorchClassifier, self).fit(
+                X_lbld, y_lbld, **fit_params
             )
-            return self
 
     def predict(self, X):
         """Return class label predictions for the input data X.
@@ -111,3 +125,5 @@ class SkorchClassifier(NeuralNet, SkactivemlClassifier):
         """
         return SkactivemlClassifier.predict(self, X)
 
+    def score(self, X, y, sample_weight=None):
+        return SkactivemlClassifier.score(self, X, y)
