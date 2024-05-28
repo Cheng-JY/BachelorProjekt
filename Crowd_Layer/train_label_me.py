@@ -31,7 +31,7 @@ def seed_everything(seed=42):
 
 
 if __name__ == '__main__':
-    seed = 42
+    seed = 420
     MISSING_LABEL = -1
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
