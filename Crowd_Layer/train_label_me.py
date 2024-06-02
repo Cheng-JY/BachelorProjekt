@@ -39,6 +39,7 @@ if __name__ == '__main__':
     X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_label_me()
 
     dataset_classes = np.unique(y_test_true)
+    print(dataset_classes)
     n_classes = len(dataset_classes)
     n_features = X_train.shape[1]
     n_annotators = y_train.shape[1]
