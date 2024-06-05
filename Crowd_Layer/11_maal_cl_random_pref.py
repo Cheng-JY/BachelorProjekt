@@ -1,17 +1,18 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from module.skorch_classifier import SkorchClassifier
+from module.crowd_layer_skorch import CrowdLayerSkorch
 from module.ground_truth_module import ClassifierModule
 from skactiveml.pool import RandomSampling
+from skactiveml.pool.multiannotator import SingleAnnotatorWrapper
+from skactiveml.utils import is_labeled
 from skorch.callbacks import LRScheduler
-from data_set.dataset import load_dataset_label_me, load_dataset_music
+from data_set.dataset import load_dataset_label_me
 
 import torch
-from torch import nn
-
 
 if __name__ == '__main__':
+    seed = 4
     MISSING_LABEL = -1
     RANDOM_STATE = 0
 
@@ -21,9 +22,7 @@ if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # load dataset
-    # dataset_name = 'music'
-    # X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_music()
-    dataset_name = 'label-me'
+    dataset_name = 'music'
     X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_label_me()
 
     classes = np.unique(y_train_true)
@@ -42,51 +41,56 @@ if __name__ == '__main__':
     }
     lr_scheduler = LRScheduler(policy='CosineAnnealingLR', T_max=hyper_parameter['max_epochs'])
 
-    net_mv = SkorchClassifier(
-        ClassifierModule,
+    gt_net = ClassifierModule(n_classes=n_classes, n_features=n_features, dropout=0.5)
+    net = CrowdLayerSkorch(
         module__n_classes=n_classes,
-        module__n_features=n_features,
-        module__dropout=0.5,
+        module__n_annotators=n_annotators,
+        module__gt_net=gt_net,
         classes=classes,
         missing_label=MISSING_LABEL,
         cost_matrix=None,
-        random_state=1,
-        criterion=nn.CrossEntropyLoss(),
+        random_state=seed,
         train_split=None,
         verbose=False,
         optimizer=torch.optim.RAdam,
         device=device,
         callbacks=[lr_scheduler],
-        **hyper_parameter
+        **hyper_parameter,
     )
 
-    # active learning (presence of omniscient annotator)
+    # active learning
     sa_qs = RandomSampling(random_state=0, missing_label=MISSING_LABEL)
+    ma_qs = SingleAnnotatorWrapper(sa_qs, random_state=0, missing_label=MISSING_LABEL)
+
+    idx = lambda A: (A[:, 0], A[:, 1])
 
     n_cycle = 20
-    # al_batch_size = 32  # music
-    al_batch_size = 256  # label me
 
     # the already observed labels for each sample and annotator
-    y = np.full_like(y_train_true, fill_value=MISSING_LABEL, dtype=np.int32)
+    y = np.full(shape=(n_samples, n_annotators), fill_value=MISSING_LABEL, dtype=np.int32)
+    y_init = np.full_like(y_train_true, fill_value=MISSING_LABEL, dtype=np.int32)
 
-    query_idx = sa_qs.query(X_train, y, batch_size=al_batch_size)
-    y[query_idx] = y_train_true[query_idx]
+    query_idx = sa_qs.query(X_train, y_init, batch_size=256)
+    y[query_idx] = y_train[query_idx]
 
     accuracies = []
-    net_mv.fit(X_train, y)
-    score = net_mv.score(X_test, y_test_true)
+    net.fit(X_train, y)
+    score = net.score(X_test, y_test_true)
     accuracies.append(score)
     print(score)
+    A_perf = net.predict_annotator_perf(X_train)
+
+    annotators = is_labeled(y_train, missing_label=MISSING_LABEL)
 
     for c in range(n_cycle):
-        query_idx = sa_qs.query(X_train, y, batch_size=al_batch_size)
-        y[query_idx] = y_train_true[query_idx]
-        net_mv.fit(X_train, y)
-        score = net_mv.score(X_test, y_test_true)
+        query_idx = ma_qs.query(X_train, y, batch_size=256*2, n_annotators_per_sample=2, annotators=annotators, A_perf=A_perf)
+        y[idx(query_idx)] = y_train[idx(query_idx)]
+        net.fit(X_train, y)
+        score = net.score(X_test, y_test_true)
         accuracies.append(score)
         print('cycle ', c, score)
+        A_perf = net.predict_annotator_perf(X_train)
 
+    plt.title(f'')
     plt.plot(accuracies)
-    plt.title(f'{dataset_name}+omniscient+random sampling')
     plt.show()

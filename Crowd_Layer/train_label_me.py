@@ -31,7 +31,7 @@ def seed_everything(seed=42):
 
 
 if __name__ == '__main__':
-    seed = 4
+    seed = 420
     MISSING_LABEL = -1
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -55,11 +55,11 @@ if __name__ == '__main__':
             'max_epochs': 50,
             'batch_size': 64,
             'lr': 0.01,
-            'optimizer__weight_decay': 0.0001
+            'optimizer__weight_decay': 1e-5
         }
         lr_scheduler = LRScheduler(policy="CosineAnnealingLR", T_max=hyper_dict['max_epochs'])
 
-        nn_name = 'cl'
+        nn_name = 'lb'
         if nn_name == 'cl':
             gt_net = ClassifierModule(n_classes=n_classes, n_features=n_features, dropout=0.5)
             net = CrowdLayerSkorch(
@@ -126,7 +126,8 @@ if __name__ == '__main__':
         valid_loss = history[:, 'valid_loss']
 
         plt.plot(train_loss)
-        plt.title(f'train: {metrics["train_accuracy"]}; test: {metrics["test_accuracy"]}')
+        plt.title(f'lr: {hyper_dict["lr"]}; weight decay: {hyper_dict["optimizer__weight_decay"]}\n'
+                  f'train: {metrics["train_accuracy"]}; test: {metrics["test_accuracy"]}')
         plt.show()
 
         loss = {'train_loss': train_loss, 'valid_loss': valid_loss}

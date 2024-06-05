@@ -81,7 +81,7 @@ if __name__ == '__main__':
     annotators = is_labeled(y_train, missing_label=MISSING_LABEL)
 
     for c in range(n_cycle):
-        query_idx = ma_qs.query(X_train, y, batch_size=256*3, n_annotators_per_sample=3, annotators=annotators)
+        query_idx = ma_qs.query(X_train, y, batch_size=256*2, n_annotators_per_sample=2, annotators=annotators)
         y[idx(query_idx)] = y_train[idx(query_idx)]
         net.fit(X_train, y)
         score = net.score(X_test, y_test_true)

@@ -23,6 +23,9 @@ if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # load dataset
+    # dataset_name = 'music'
+    # X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_music()
+    dataset_name = 'label-me'
     X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_label_me()
 
     classes = np.unique(y_train_true)
@@ -60,18 +63,20 @@ if __name__ == '__main__':
     )
 
     # active learning
-    sa_qs = RandomSampling(random_state=0, missing_label=MISSING_LABEL)
-    ma_qs = SingleAnnotatorWrapper(sa_qs, random_state=0, missing_label=MISSING_LABEL)
+    sa_qs = RandomSampling(random_state=RANDOM_STATE, missing_label=MISSING_LABEL)
+    ma_qs = SingleAnnotatorWrapper(sa_qs, random_state=RANDOM_STATE, missing_label=MISSING_LABEL)
 
     idx = lambda A: (A[:, 0], A[:, 1])
 
     n_cycle = 20
+    # al_batch_size = 32  # music
+    al_batch_size = 256  # label me
 
     # the already observed labels for each sample and annotator
     y = np.full(shape=(n_samples, n_annotators), fill_value=MISSING_LABEL, dtype=np.int32)
     y_init = np.full_like(y_train_true, fill_value=MISSING_LABEL, dtype=np.int32)
 
-    query_idx = sa_qs.query(X_train, y_init, batch_size=256)
+    query_idx = sa_qs.query(X_train, y_init, batch_size=al_batch_size)
     y[query_idx] = y_train[query_idx]
 
     accuracies = []
@@ -84,7 +89,7 @@ if __name__ == '__main__':
     annotators = is_labeled(y_train, missing_label=MISSING_LABEL)
 
     for c in range(n_cycle):
-        query_idx = ma_qs.query(X_train, y, batch_size=256*3, n_annotators_per_sample=3, annotators=annotators)
+        query_idx = ma_qs.query(X_train, y, batch_size=al_batch_size*2, n_annotators_per_sample=2, annotators=annotators)
         y[idx(query_idx)] = y_train[idx(query_idx)]
         y_mv = majority_vote(y, random_state=RANDOM_STATE, missing_label=MISSING_LABEL)
         net_mv.fit(X_train, y_mv)
@@ -93,4 +98,5 @@ if __name__ == '__main__':
         print('cycle ', c, score)
 
     plt.plot(accuracies)
+    plt.title(f'{dataset_name}+majority-voting+random sampling')
     plt.show()
