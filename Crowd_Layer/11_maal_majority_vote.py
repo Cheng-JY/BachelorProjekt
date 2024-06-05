@@ -1,22 +1,17 @@
-import matplotlib as mlp
 import matplotlib.pyplot as plt
 import numpy as np
 
-from copy import deepcopy
-
-from module.crowd_layer_skorch import CrowdLayerSkorch
 from module.skorch_classifier import SkorchClassifier
 from module.ground_truth_module import ClassifierModule
 from skactiveml.pool import RandomSampling
 from skactiveml.pool.multiannotator import SingleAnnotatorWrapper
-from skactiveml.utils import majority_vote
+from skactiveml.utils import majority_vote, is_labeled
 from skorch.callbacks import LRScheduler
-from data_set.dataset import LabelMeDataSet, load_dataset_label_me
+from data_set.dataset import load_dataset_label_me
 
 import torch
 from torch import nn
-import torch.nn.functional as F
-from tqdm import tqdm
+
 
 if __name__ == '__main__':
     MISSING_LABEL = -1
@@ -86,8 +81,10 @@ if __name__ == '__main__':
     accuracies.append(score)
     print(score)
 
+    annotators = is_labeled(y_train, missing_label=MISSING_LABEL)
+
     for c in range(n_cycle):
-        query_idx = ma_qs.query(X_train, y, batch_size=512, n_annotators_per_sample=2)
+        query_idx = ma_qs.query(X_train, y, batch_size=256*3, n_annotators_per_sample=3, annotators=annotators)
         y[idx(query_idx)] = y_train[idx(query_idx)]
         y_mv = majority_vote(y, random_state=RANDOM_STATE, missing_label=MISSING_LABEL)
         net_mv.fit(X_train, y_mv)
