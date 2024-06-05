@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from skactiveml.utils import is_labeled
 
 from module.skorch_classifier import SkorchClassifier
 from module.ground_truth_module import ClassifierModule
@@ -21,10 +22,10 @@ if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # load dataset
-    # dataset_name = 'music'
-    # X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_music()
-    dataset_name = 'label-me'
-    X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_label_me()
+    dataset_name = 'music'
+    X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_music()
+    # dataset_name = 'label-me'
+    # X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_label_me()
 
     classes = np.unique(y_train_true)
     n_classes = len(classes)
@@ -64,8 +65,8 @@ if __name__ == '__main__':
     sa_qs = RandomSampling(random_state=0, missing_label=MISSING_LABEL)
 
     n_cycle = 20
-    # al_batch_size = 32  # music
-    al_batch_size = 256  # label me
+    al_batch_size = 32  # music
+    # al_batch_size = 256  # label me
 
     # the already observed labels for each sample and annotator
     y = np.full_like(y_train_true, fill_value=MISSING_LABEL, dtype=np.int32)

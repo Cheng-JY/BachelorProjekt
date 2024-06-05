@@ -7,7 +7,7 @@ from skactiveml.pool import RandomSampling
 from skactiveml.pool.multiannotator import SingleAnnotatorWrapper
 from skactiveml.utils import majority_vote, is_labeled
 from skorch.callbacks import LRScheduler
-from data_set.dataset import load_dataset_label_me
+from data_set.dataset import load_dataset_label_me, load_dataset_music
 
 import torch
 from torch import nn
@@ -23,10 +23,10 @@ if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # load dataset
-    # dataset_name = 'music'
-    # X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_music()
-    dataset_name = 'label-me'
-    X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_label_me()
+    dataset_name = 'music'
+    X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_music()
+    # dataset_name = 'label-me'
+    # X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_label_me()
 
     classes = np.unique(y_train_true)
     n_classes = len(classes)
@@ -69,8 +69,8 @@ if __name__ == '__main__':
     idx = lambda A: (A[:, 0], A[:, 1])
 
     n_cycle = 20
-    # al_batch_size = 32  # music
-    al_batch_size = 256  # label me
+    al_batch_size = 32  # music
+    # al_batch_size = 256  # label me
 
     # the already observed labels for each sample and annotator
     y = np.full(shape=(n_samples, n_annotators), fill_value=MISSING_LABEL, dtype=np.int32)

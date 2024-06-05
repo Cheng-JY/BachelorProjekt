@@ -7,7 +7,7 @@ from skactiveml.pool import RandomSampling
 from skactiveml.pool.multiannotator import SingleAnnotatorWrapper
 from skactiveml.utils import is_labeled
 from skorch.callbacks import LRScheduler
-from data_set.dataset import load_dataset_label_me
+from data_set.dataset import load_dataset_label_me, load_dataset_music
 
 import torch
 
@@ -22,7 +22,9 @@ if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # load dataset
-    dataset_name = 'music'
+    # dataset_name = 'music'
+    # X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_music()
+    dataset_name = 'label-me'
     X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_label_me()
 
     classes = np.unique(y_train_true)
@@ -65,12 +67,14 @@ if __name__ == '__main__':
     idx = lambda A: (A[:, 0], A[:, 1])
 
     n_cycle = 20
+    # al_batch_size = 32  # music
+    al_batch_size = 256  # label me
 
     # the already observed labels for each sample and annotator
     y = np.full(shape=(n_samples, n_annotators), fill_value=MISSING_LABEL, dtype=np.int32)
     y_init = np.full_like(y_train_true, fill_value=MISSING_LABEL, dtype=np.int32)
 
-    query_idx = sa_qs.query(X_train, y_init, batch_size=256)
+    query_idx = sa_qs.query(X_train, y_init, batch_size=al_batch_size)
     y[query_idx] = y_train[query_idx]
 
     accuracies = []
@@ -83,7 +87,7 @@ if __name__ == '__main__':
     annotators = is_labeled(y_train, missing_label=MISSING_LABEL)
 
     for c in range(n_cycle):
-        query_idx = ma_qs.query(X_train, y, batch_size=256*2, n_annotators_per_sample=2, annotators=annotators, A_perf=A_perf)
+        query_idx = ma_qs.query(X_train, y, batch_size=al_batch_size*2, n_annotators_per_sample=2, annotators=annotators, A_perf=A_perf)
         y[idx(query_idx)] = y_train[idx(query_idx)]
         net.fit(X_train, y)
         score = net.score(X_test, y_test_true)
@@ -91,6 +95,6 @@ if __name__ == '__main__':
         print('cycle ', c, score)
         A_perf = net.predict_annotator_perf(X_train)
 
-    plt.title(f'')
     plt.plot(accuracies)
+    plt.title(f'{dataset_name}+cl+random sampling+A_perf')
     plt.show()
