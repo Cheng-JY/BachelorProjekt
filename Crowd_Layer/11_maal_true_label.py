@@ -5,6 +5,7 @@ from skactiveml.utils import is_labeled
 from module.skorch_classifier import SkorchClassifier
 from module.ground_truth_module import ClassifierModule
 from skactiveml.pool import RandomSampling
+from skactiveml.utils import majority_vote
 from skorch.callbacks import LRScheduler
 from data_set.dataset import load_dataset_label_me, load_dataset_music
 
@@ -22,10 +23,10 @@ if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # load dataset
-    dataset_name = 'music'
-    X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_music()
-    # dataset_name = 'label-me'
-    # X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_label_me()
+    # dataset_name = 'music'
+    # X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_music()
+    dataset_name = 'label-me'
+    X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_label_me()
 
     classes = np.unique(y_train_true)
     n_classes = len(classes)
@@ -43,51 +44,49 @@ if __name__ == '__main__':
     }
     lr_scheduler = LRScheduler(policy='CosineAnnealingLR', T_max=hyper_parameter['max_epochs'])
 
-    net_mv = SkorchClassifier(
-        ClassifierModule,
-        module__n_classes=n_classes,
-        module__n_features=n_features,
-        module__dropout=0.5,
-        classes=classes,
-        missing_label=MISSING_LABEL,
-        cost_matrix=None,
-        random_state=1,
-        criterion=nn.CrossEntropyLoss(),
-        train_split=None,
-        verbose=False,
-        optimizer=torch.optim.RAdam,
-        device=device,
-        callbacks=[lr_scheduler],
-        **hyper_parameter
-    )
+    # Performance
+    accuracies = []
 
     # active learning (presence of omniscient annotator)
     sa_qs = RandomSampling(random_state=0, missing_label=MISSING_LABEL)
 
     n_cycle = 20
-    al_batch_size = 32  # music
-    # al_batch_size = 256  # label me
+    # al_batch_size = 32  # music
+    al_batch_size = 256  # label me
 
-    # the already observed labels for each sample and annotator
+    module = 'mv'
+    y_mv = majority_vote(y_train, classes=classes, missing_label=MISSING_LABEL, random_state=RANDOM_STATE)
+
     y = np.full_like(y_train_true, fill_value=MISSING_LABEL, dtype=np.int32)
-
-    query_idx = sa_qs.query(X_train, y, batch_size=al_batch_size)
-    y[query_idx] = y_train_true[query_idx]
-
-    accuracies = []
-    net_mv.fit(X_train, y)
-    score = net_mv.score(X_test, y_test_true)
-    accuracies.append(score)
-    print(score)
-
-    for c in range(n_cycle):
+    for c in range(n_cycle + 1):
         query_idx = sa_qs.query(X_train, y, batch_size=al_batch_size)
-        y[query_idx] = y_train_true[query_idx]
-        net_mv.fit(X_train, y)
-        score = net_mv.score(X_test, y_test_true)
+        if module == 'omniscient':
+            y[query_idx] = y_train_true[query_idx]
+        elif module == 'mv':
+            y[query_idx] = y_mv[query_idx]
+
+        net = SkorchClassifier(
+            ClassifierModule,
+            module__n_classes=n_classes,
+            module__n_features=n_features,
+            module__dropout=0.5,
+            classes=classes,
+            missing_label=MISSING_LABEL,
+            cost_matrix=None,
+            random_state=1,
+            criterion=nn.CrossEntropyLoss(),
+            train_split=None,
+            verbose=False,
+            optimizer=torch.optim.RAdam,
+            device=device,
+            callbacks=[lr_scheduler],
+            **hyper_parameter
+        )
+        net.fit(X_train, y)
+        score = net.score(X_test, y_test_true)
         accuracies.append(score)
         print('cycle ', c, score)
 
     plt.plot(accuracies)
-    plt.title(f'{dataset_name}+omniscient+random sampling')
+    plt.title(f'{dataset_name}+{module}+instances+random sampling')
     plt.show()

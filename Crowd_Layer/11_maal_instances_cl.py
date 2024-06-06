@@ -1,15 +1,17 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from skactiveml.utils import is_labeled
 
 from module.crowd_layer_skorch import CrowdLayerSkorch
 from module.ground_truth_module import ClassifierModule
 from skactiveml.pool import RandomSampling
-from skactiveml.pool.multiannotator import SingleAnnotatorWrapper
-from skactiveml.utils import is_labeled
+from skactiveml.utils import majority_vote
 from skorch.callbacks import LRScheduler
 from data_set.dataset import load_dataset_label_me, load_dataset_music
 
 import torch
+from torch import nn
+
 
 if __name__ == '__main__':
     MISSING_LABEL = -1
@@ -42,56 +44,47 @@ if __name__ == '__main__':
     }
     lr_scheduler = LRScheduler(policy='CosineAnnealingLR', T_max=hyper_parameter['max_epochs'])
 
-    gt_net = ClassifierModule(n_classes=n_classes, n_features=n_features, dropout=0.5)
-    net = CrowdLayerSkorch(
-        module__n_classes=n_classes,
-        module__n_annotators=n_annotators,
-        module__gt_net=gt_net,
-        classes=classes,
-        missing_label=MISSING_LABEL,
-        cost_matrix=None,
-        random_state=RANDOM_STATE,
-        train_split=None,
-        verbose=False,
-        optimizer=torch.optim.RAdam,
-        device=device,
-        callbacks=[lr_scheduler],
-        **hyper_parameter,
-    )
+    # Performance
+    accuracies = []
 
-    # active learning
+    # active learning (presence of omniscient annotator)
     sa_qs = RandomSampling(random_state=0, missing_label=MISSING_LABEL)
-    ma_qs = SingleAnnotatorWrapper(sa_qs, random_state=0, missing_label=MISSING_LABEL)
-
-    idx = lambda A: (A[:, 0], A[:, 1])
 
     n_cycle = 20
     # al_batch_size = 32  # music
     al_batch_size = 256  # label me
 
-    # the already observed labels for each sample and annotator
+    module = 'cl'
     y = np.full(shape=(n_samples, n_annotators), fill_value=MISSING_LABEL, dtype=np.int32)
-    y_init = np.full_like(y_train_true, fill_value=MISSING_LABEL, dtype=np.int32)
+    y_init = np.full_like(y_train_true, MISSING_LABEL)
+    for c in range(n_cycle + 1):
+        query_idx = sa_qs.query(X_train, y_init, batch_size=al_batch_size)
 
-    query_idx = sa_qs.query(X_train, y_init, batch_size=al_batch_size)
-    y[query_idx] = y_train[query_idx]
+        y[query_idx] = y_train[query_idx]
+        y_init[query_idx] = y_train_true[query_idx] # not for training
 
-    accuracies = []
-    net.fit(X_train, y)
-    score = net.score(X_test, y_test_true)
-    accuracies.append(score)
-    print(score)
+        gt_net = ClassifierModule(n_classes=n_classes, n_features=n_features, dropout=0.5)
+        net = CrowdLayerSkorch(
+            module__n_classes=n_classes,
+            module__n_annotators=n_annotators,
+            module__gt_net=gt_net,
+            classes=classes,
+            missing_label=MISSING_LABEL,
+            cost_matrix=None,
+            random_state=RANDOM_STATE,
+            train_split=None,
+            verbose=False,
+            optimizer=torch.optim.RAdam,
+            device=device,
+            callbacks=[lr_scheduler],
+            **hyper_parameter,
+        )
 
-    annotators = is_labeled(y_train, missing_label=MISSING_LABEL)
-
-    for c in range(n_cycle):
-        query_idx = ma_qs.query(X_train, y, batch_size=al_batch_size*2, n_annotators_per_sample=2, annotators=annotators)
-        y[idx(query_idx)] = y_train[idx(query_idx)]
         net.fit(X_train, y)
         score = net.score(X_test, y_test_true)
         accuracies.append(score)
         print('cycle ', c, score)
 
     plt.plot(accuracies)
-    plt.title(f'{dataset_name}+cl+random sampling')
+    plt.title(f'{dataset_name}+{module}+instances+random sampling')
     plt.show()
