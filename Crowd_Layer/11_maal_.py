@@ -27,10 +27,10 @@ if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # load dataset
-    # dataset_name = 'music'
-    # X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_music()
-    dataset_name = 'label-me'
-    X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_label_me()
+    dataset_name = 'music'
+    X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_music()
+    # dataset_name = 'label-me'
+    # X_train, y_train, y_train_true, X_valid, y_valid_true, X_test, y_test_true = load_dataset_label_me()
 
     classes = np.unique(y_train_true)
     n_classes = len(classes)
@@ -53,26 +53,35 @@ if __name__ == '__main__':
 
     # Randomly add missing labels
     y_partial = np.full_like(y_train, fill_value=MISSING_LABEL)
-    initial_label_size = 100 # label me
-    # initial_label_size = 32 # music
+    # initial_label_size = 100  # label me
+    initial_label_size = 10  # music
 
     for a_idx in range(n_annotators):
+        # is_lbld_a the samples that the annotator a_idx annotated
         is_lbld_a = is_labeled(y_train[:, a_idx], missing_label=-1)
-        p_a = is_lbld_a / is_lbld_a.sum()  # no annotation with 0, with annotation 1/n_annotation
+        # the probability a sample being initially annotated by annotator a_idx
+        # no annotation with 0, with annotation 1/(n_annotation)
+        p_a = is_lbld_a / is_lbld_a.sum()
+        # getting the size of initial_label_size
         initial_label_size_a = initial_label_size if is_lbld_a.sum() >= initial_label_size else is_lbld_a.sum()
+        # randomly selecting an array selected_idx_a，
+        # size: initial_label_size_a。
+        # p_a guarantee only annotated samples being selected
         selected_idx_a = random_state.choice(np.arange(n_samples), size=initial_label_size_a, p=p_a, replace=False)
         y_partial[selected_idx_a, a_idx] = y_train[selected_idx_a, a_idx]
 
     # active learning
     sa_qs = RandomSampling(random_state=RANDOM_STATE, missing_label=MISSING_LABEL)
     ma_qs = SingleAnnotatorWrapper(sa_qs, random_state=RANDOM_STATE, missing_label=MISSING_LABEL)
+
+    # right now all instance are candidate
     candidate_indices = np.arange(n_samples)
 
     idx = lambda A: (A[:, 0], A[:, 1])
 
     n_cycle = 20
-    # al_batch_size = 32  # music
-    al_batch_size = 256  # label me
+    al_batch_size = 32  # music
+    # al_batch_size = 256  # label me
 
     A_random = np.ones_like(y_partial)
     annot_perf_sel = False
@@ -81,19 +90,39 @@ if __name__ == '__main__':
         if c > 0:
             A_perf = A_random
             y_query = np.copy(y_partial)
+            # getting the annotated sample-annotator pairs
             no_label_available = is_unlabeled(y_train, missing_label=MISSING_LABEL)
-            # y_query[no_label_available] = 0 #Don't understand ???
+            label_available = is_labeled(y_train, missing_label=MISSING_LABEL)
+            # try to give unannotated pair a label that query doesn't choose this
+            y_query[no_label_available] = 0
             is_ulbld_query = is_unlabeled(y_query, missing_label=MISSING_LABEL)
-            is_candidate = is_ulbld_query.all(axis=-1)
+            # Why all? That means for such a sample which all annotator annotated can be a candidate
+            # is_candidate = is_ulbld_query.all(axis=-1)
+            is_candidate = is_ulbld_query.any(axis=1)
+
             candidates = candidate_indices[is_candidate]
+
+            # https://scikit-activeml.github.io/scikit-activeml-docs/generated/api/skactiveml.pool.multiannotator.SingleAnnotatorWrapper.html
+            # it doesn't work like what the document says
+            # query_indices = ma_qs.query(
+            #                 X=X_train,
+            #                 y=y_query,
+            #                 candidates=candidates,
+            #                 A_perf=A_perf[candidates],
+            #                 batch_size=al_batch_size,
+            #                 annotators=label_available[candidates],
+            #                 n_annotators_per_sample=1,
+            #             )
             query_indices = ma_qs.query(
                 X=X_train,
                 y=y_query,
-                candidates=candidate_indices,
-                A_perf=A_perf,
+                candidates=candidates,
+                A_perf=A_perf[candidates],
                 batch_size=al_batch_size,
+                # annotators=label_available,
                 n_annotators_per_sample=1,
             )
+            print(c, query_indices)
             y_partial[idx(query_indices)] = y_train[idx(query_indices)]
 
         y_agg = majority_vote(y=y_partial, classes=classes, missing_label=MISSING_LABEL, random_state=RANDOM_STATE)
@@ -106,7 +135,7 @@ if __name__ == '__main__':
             classes=classes,
             missing_label=MISSING_LABEL,
             cost_matrix=None,
-            random_state=1,
+            random_state=RANDOM_STATE,
             criterion=nn.CrossEntropyLoss(),
             train_split=None,
             verbose=False,
